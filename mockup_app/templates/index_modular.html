@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlareCheck.com</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/logos/favicon.ico">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-blue: #4274a5;
+            --accent-yellow: #ffc107;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --background-light: #f8fafc;
+            --border-color: #e2e8f0;
+            --header-height: 72px; /* 70px header + 2px border */
+            --sidebar-width: 380px;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--background-light);
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .header {
+            height: 70px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+        
+        /* Layout Container */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 70px);
+            margin-top: 70px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex-shrink: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        /* Coordinate Display */
+        .coordinate-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 12px;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            z-index: 100;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            pointer-events: none;
+            user-select: none;
+        }
+        
+        .coordinate-display .coord-label {
+            color: #666;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        
+        .coordinate-display .coord-value {
+            color: #333;
+        }
+        
+        
+        /* Menu Styles with Animations */
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            color: var(--text-primary);
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .menu-item:hover {
+            background-color: var(--background-light);
+        }
+        
+        .menu-item.active {
+            background-color: #e3f2fd;
+            color: var(--primary-blue);
+            font-weight: 500;
+        }
+        
+        .menu-item i {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 1.1rem;
+        }
+        
+        .menu-section {
+            padding: 0;
+            background: white;
+            overflow-y: auto;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1),
+                        opacity 0.3s ease;
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        /* Hide menu when submenu is active */
+        .menu-section.collapsed {
+            display: none;
+        }
+        
+        /* Back button - simpler design */
+        .content-panel .back-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            margin: 15px 20px 20px 20px;
+            background: transparent;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            width: calc(100% - 40px);
+        }
+        
+        .content-panel .back-button:hover {
+            background: #f8fafc;
+            color: #475569;
+            transform: translateX(-2px);
+            border-color: #cbd5e1;
+        }
+        
+        .content-panel .back-button i {
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
+        }
+        
+        .content-panel .back-button:hover i {
+            transform: translateX(-4px);
+        }
+        
+        .content-panel .back-button .button-text {
+            display: inline;
+        }
+        
+        /* Current function display removed as requested */
+        
+        /* All menu headers - consistent style */
+        .menu-header {
+            padding: 20px 25px;
+            margin: 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid var(--primary-blue);
+            color: var(--primary-blue);
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        
+        /* Make submenu headers full width */
+        .content-panel .menu-header {
+            margin-left: 0;
+            margin-right: 0;
+            width: 100%;
+        }
+        
+        
+        /* Search Box */
+        .search-box {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+        
+        /* Content Panels with Slide Animation */
+        .content-panel {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 0;
+            overflow: hidden; /* Changed from auto to hidden */
+            background: white;
+            z-index: 10;
+            flex-direction: column;
+        }
+        
+        .content-panel.active {
+            display: flex; /* Changed from block to flex */
+            animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        
+        .content-panel.sliding-out {
+            display: block;
+            animation: slideOutToLeft 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes slideInFromLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0.5;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutToLeft {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+        
+        /* Special case for default hint - just fade */
+        #default-hint {
+            animation: none;
+        }
+        
+        #default-hint.active {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Lists */
+        .element-list {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 2px 5px 20px 5px; /* Small top padding to prevent cutoff */
+            min-height: 0; /* Important for flexbox scrolling */
+        }
+        
+        /* Wrapper for scrollable content in panels */
+        .scrollable-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        
+        /* Small form checks */
+        .form-check-sm .form-check-input {
+            width: 0.875rem;
+            height: 0.875rem;
+            margin-top: 0.25rem;
+            border-color: #cbd5e0;
+        }
+        
+        .form-check-sm .form-check-input:checked {
+            background-color: #4274a5;
+            border-color: #4274a5;
+        }
+        
+        .form-check-sm .form-check-label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        /* Auto-calculate styling - remove all styling */
+        .pv-details input[type="checkbox"] {
+            margin: 0 4px 0 4px;
+            border: 1px solid #cbd5e0;
+            background: white;
+        }
+        
+        .pv-details input[type="checkbox"]:checked {
+            background-color: #4274a5;
+            border-color: #4274a5;
+        }
+        
+        .pv-details label[for*="auto-calc"] {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin: 0;
+            background: none !important;
+            border: none !important;
+            padding: 0 !important;
+            display: inline !important;
+        }
+        
+        
+        .element-item {
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .element-item:hover {
+            background-color: #f8fafc;
+            box-shadow: 0 2px 6px rgba(66, 116, 165, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .pv-area-item .element-item {
+            transition: background-color 0.2s;
+        }
+        
+        .pv-area-item .element-item:hover {
+            background-color: #f0f4f8;
+        }
+        
+        /* PV Details Styling */
+        .pv-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: transparent;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .pv-details.expanded {
+            max-height: 1500px;
+            transition: max-height 0.5s ease-in;
+            margin-top: 0; /* Reset margin */
+        }
+        
+        .pv-details .small {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 15px;
+            margin: 0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+        }
+        
+        /* Blue border for expanded items with overlap */
+        .pv-details.expanded .small {
+            border-color: #4274a5;
+            border-top: 1px solid #4274a5; /* Add blue top border */
+            margin-top: -2px; /* Overlap with header */
+            position: relative;
+            z-index: 1;
+        }
+        
+        .pv-details .row {
+            margin-bottom: 12px;
+        }
+        
+        .pv-details .col-form-label {
+            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .pv-details .btn-group {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        /* PV area item header styling */
+        .pv-area-item {
+            margin-bottom: 8px; /* Reduced spacing between items */
+        }
+        
+        .pv-area-item .element-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 15px;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .pv-area-item .element-item:hover {
+            background: #f8fafc;
+            border-color: #4274a5;
+            box-shadow: 0 2px 6px rgba(66, 116, 165, 0.1);
+            position: relative; /* Ensure proper stacking */
+            z-index: 2; /* Bring to front on hover */
+        }
+        
+        /* When expanded, connect header with details */
+        .pv-area-item:has(.pv-details.expanded) .element-item {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            border-bottom-color: #4274a5; /* Keep border but make it blue */
+            background: #4274a5;
+            color: white;
+            border-color: #4274a5;
+            margin-bottom: -1px; /* Pull content up by overlapping */
+        }
+        
+        .pv-area-item:has(.pv-details.expanded) .element-item .text-muted {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+        
+        .pv-area-item:has(.pv-details.expanded) .element-item .text-danger {
+            color: rgba(255, 182, 193, 0.9) !important;
+        }
+        
+        /* Remove padding and margins for seamless connection */
+        .pv-details.expanded + .pv-details .small {
+            margin-top: -1px;
+        }
+        
+        /* Buttons */
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #4274a5;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: #5a86c7;
+        }
+        
+        /* Create button style - simple prominent */
+        .btn-create {
+            background: #4274a5;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+            margin: 0 20px 20px 20px;
+            width: calc(100% - 40px) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-create:hover {
+            background: #5a86c7;
+        }
+        
+        /* Separator line after buttons */
+        .btn-create:last-of-type {
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .btn-create:last-of-type::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #cbd5e1 15%, #cbd5e1 85%, transparent);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        
+        .btn-create i {
+            font-size: 1rem;
+        }
+        
+        .btn-outline-primary {
+            color: #4274a5;
+            border: 1px solid #4274a5;
+            background: white;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #4274a5;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(66, 116, 165, 0.2);
+        }
+        
+        /* Fix for PV type modal hover text */
+        #pvTypeModal .btn-outline-primary:hover small {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+        
+        #pvTypeModal .btn-outline-primary small {
+            transition: color 0.15s ease;
+        }
+        
+        .btn-delete {
+            color: #dc3545;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-delete:hover {
+            color: #a02622;
+        }
+        
+        /* Info tooltips styling */
+        .info-tooltip {
+            color: #4274a5;
+            font-size: 0.9rem;
+            cursor: help;
+            margin-left: 5px;
+        }
+        
+        .info-tooltip:hover {
+            color: #5a86c7;
+        }
+        
+        /* Content sections padding */
+        .content-section {
+            padding: 20px;
+        }
+        
+        .content-section h5 {
+            color: #4274a5;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        /* Section headings in subpanels (not menu headers) */
+        .content-panel h6:not(.menu-header) {
+            color: #475569;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 35px 20px 10px 20px;
+            padding: 0;
+        }
+        
+        /* First section heading after buttons */
+        .btn-create:last-of-type ~ h6:first-of-type {
+            margin-top: 45px;
+        }
+        
+        /* Panel content wrapper for consistent spacing */
+        .panel-content {
+            padding: 20px;
+        }
+        
+        .panel-content > *:first-child {
+            margin-top: 0;
+        }
+        
+        .panel-content > *:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Ensure consistent spacing between panel elements */
+        .content-panel > *:not(.menu-header) {
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+        
+        .content-panel > .back-button {
+            margin: 15px 20px 20px 20px;
+        }
+        
+        .content-panel > .element-list {
+            margin: 0;
+            padding: 20px;
+        }
+        
+        /* Drag and Drop styles */
+        .pv-area-item {
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .pv-area-item.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+            background-color: #f0f0f0;
+        }
+        
+        .pv-area-item.drag-over-top {
+            border-top: 3px solid #4274a5;
+            padding-top: 8px;
+            margin-top: -5px;
+        }
+        
+        .pv-area-item.drag-over-bottom {
+            border-bottom: 3px solid #4274a5;
+            padding-bottom: 8px;
+            margin-bottom: -5px;
+        }
+        
+        .pv-area-item .fa-grip-vertical {
+            transition: all 0.2s ease;
+        }
+        
+        .pv-area-item .fa-grip-vertical:hover {
+            color: #4274a5 !important;
+            transform: scale(1.2);
+        }
+        
+        .pv-area-item .fa-grip-vertical:active {
+            cursor: grabbing !important;
+        }
+        
+        @keyframes pulse {
+            0% {
+                background-color: rgba(66, 116, 165, 0.1);
+            }
+            50% {
+                background-color: rgba(66, 116, 165, 0.3);
+            }
+            100% {
+                background-color: rgba(66, 116, 165, 0.1);
+            }
+        }
+        
+        /* Module Type Manager Styles */
+        #moduleTypesList .table {
+            margin-bottom: 0;
+        }
+        
+        #moduleTypesList .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        #moduleTypesList .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        #moduleTypesList .badge {
+            font-size: 0.75rem;
+        }
+        
+        #moduleTypesList .btn-group-sm .btn {
+            padding: 0.125rem 0.5rem;
+        }
+        
+        /* Module Type Cards */
+        #moduleTypesList .card {
+            border: 1px solid #dee2e6;
+            transition: box-shadow 0.2s;
+        }
+        
+        #moduleTypesList .card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        #moduleTypesList .btn-sm {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+        }
+        
+        #moduleTypesList .badge {
+            padding: 0.35em 0.65em;
+        }
+        
+        /* Delete Modal Styling */
+        .modal-header.bg-danger {
+            background-color: #dc3545 !important;
+        }
+        
+        .btn-close-white {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        
+        /* Corner Details Panel */
+        .corner-details-panel {
+            position: fixed;
+            top: 70px; /* Align exactly with header bottom to avoid any gap */
+            right: -650px;
+            width: 650px;
+            height: calc(100vh - 70px);
+            background: white;
+            border-left: 1px solid var(--border-color);
+            z-index: 999;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .corner-details-panel.open {
+            right: 0;
+        }
+        
+        .corner-details-panel .panel-header-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .corner-details-panel .menu-header {
+            margin: 0;
+            width: 100%;
+            padding-right: 40px; /* Space for close button */
+            /* Inherit all styles from global .menu-header */
+        }
+        
+        .corner-details-panel .btn-close {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+        }
+        
+        .corner-details-panel .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .corners-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        /* Form Controls Styling */
+        .form-control {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .form-control:focus {
+            border-color: #4274a5;
+            box-shadow: 0 0 0 3px rgba(66, 116, 165, 0.1);
+            outline: none;
+        }
+        
+        .form-control-sm {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+        
+        .form-label {
+            color: #475569;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        /* Form groups in panels */
+        .content-panel .form-group,
+        .content-panel .mb-3 {
+            margin-bottom: 15px;
+        }
+        
+        .content-panel .form-group:last-child,
+        .content-panel .mb-3:last-child {
+            margin-bottom: 0;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group-text {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+        
+        .coordinate-input-group {
+            position: relative;
+        }
+        
+        .coordinate-input-group .form-control:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(66, 116, 165, 0.25);
+        }
+        
+        .coordinate-edit-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .corner-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+        
+        .corner-card.editing {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        
+        .coordinate-info {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        /* Corner label with outline for better readability */
+        .corner-label-with-outline {
+            text-shadow: 
+                -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000,
+                -1px  0   0 #000,
+                 1px  0   0 #000,
+                 0   -1px 0 #000,
+                 0    1px 0 #000;
+        }
+        
+        /* Custom checkbox styling */
+        .form-check-input:checked {
+            background-color: #4274a5;
+            border-color: #4274a5;
+        }
+        
+        .form-check-input:focus {
+            border-color: #4274a5;
+            box-shadow: 0 0 0 0.25rem rgba(66, 116, 165, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" style="display: flex; align-items: center; padding: 10px 20px;">
+        <img src="/logos/GlearCheck_Logo_5.png" alt="GlareCheck Logo" style="height: 40px; margin-right: 15px;">
+        <h1 style="margin: 0;">GlareCheck.com</h1>
+    </header>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Menu -->
+            <div class="menu-section" id="menu-section">
+                <h6 class="menu-header">Hauptmenü</h6>
+                <button class="menu-item" data-panel="search">
+                    <i class="fas fa-search"></i>
+                    Adresssuche
+                </button>
+                <button class="menu-item" data-panel="pv-areas">
+                    <i class="fas fa-solar-panel"></i>
+                    PV-Flächen
+                </button>
+                <button class="menu-item" data-panel="observation-points">
+                    <i class="fas fa-eye"></i>
+                    Betrachtungspunkte
+                </button>
+                <button class="menu-item" data-panel="excluded-areas">
+                    <i class="fas fa-ban"></i>
+                    Excluded Areas
+                </button>
+                <button class="menu-item" data-panel="obstacles">
+                    <i class="fas fa-building"></i>
+                    Hindernisse
+                </button>
+            </div>
+            
+            <!-- Content Panels -->
+            
+            <!-- Default Navigation Hint -->
+            <div class="content-panel" id="default-hint">
+                <div class="text-center p-4">
+                    <i class="fas fa-hand-pointer fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Navigation</h6>
+                    <p class="small text-muted">
+                        Verwenden Sie die Maus, um die Karte zu bewegen und zu zoomen.
+                    </p>
+                    <hr class="my-3">
+                    <p class="small text-muted">
+                        Wählen Sie eine Funktion aus dem Menü, um zu beginnen.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Search Panel -->
+            <div class="content-panel" id="panel-search">
+                <h6 class="menu-header">Adresssuche</h6>
+                <button class="back-button" onclick="backToMenu()">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="button-text">Zurück zum Hauptmenü</span>
+                </button>
+                <div class="search-box p-0">
+                    <input type="text" class="search-input" id="address-search" placeholder="Adresse eingeben...">
+                    <button class="btn btn-primary btn-sm w-100 mt-2" onclick="searchAddress()">
+                        <i class="fas fa-search"></i> Suchen
+                    </button>
+                    <div class="mt-3 small text-muted">
+                        <p class="mb-1"><strong>Tipp:</strong> Auch Koordinaten möglich</p>
+                        <p class="mb-0">Format: 48.1351, 11.5820</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PV Areas Panel -->
+            <div class="content-panel" id="panel-pv-areas">
+                <h6 class="menu-header">PV-Flächen</h6>
+                <button class="back-button" onclick="backToMenu()">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="button-text">Zurück zum Hauptmenü</span>
+                </button>
+                <button class="btn btn-create" onclick="showPVTypeModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>Neue PV-Fläche erstellen</span>
+                </button>
+                
+                <div class="scrollable-wrapper">
+                    <h6 style="margin: 20px 5px 15px 5px;">Vorhandene PV-Flächen:</h6>
+                    <div class="element-list" id="pv-list">
+                        <p class="text-muted small">Keine PV-Flächen vorhanden</p>
+                    </div>
+                    <div class="text-muted small mt-2" style="padding: 0 5px 20px 5px;">
+                        <i class="fas fa-info-circle"></i> 
+                        <em>Tipp: Ziehen Sie am <i class="fas fa-grip-vertical"></i> Symbol, um die Reihenfolge zu ändern. Die Nummerierung (PV1, PV2, ...) wird automatisch angepasst.</em>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PV Arrays Panel -->
+            <!-- Observation Points Panel -->
+            <div class="content-panel" id="panel-observation-points">
+                <h6 class="menu-header">Betrachtungspunkte</h6>
+                <button class="back-button" onclick="backToMenu()">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="button-text">Zurück zum Hauptmenü</span>
+                </button>
+                <button class="btn btn-create" onclick="startDrawingOP()">
+                    <i class="fas fa-plus"></i>
+                    <span>Neuen Betrachtungspunkt setzen</span>
+                </button>
+                
+                <div class="scrollable-wrapper">
+                    <div style="padding: 20px 5px 0 5px;">
+                        <div class="mb-3">
+                            <label class="form-label small">Beobachterhöhe (m):</label>
+                            <input type="number" class="form-control form-control-sm" id="op-height-observer" value="1.5" step="0.1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Objekthöhe (m):</label>
+                            <input type="number" class="form-control form-control-sm" id="op-height-object" value="10" step="0.1">
+                        </div>
+                    </div>
+                    
+                    <h6 style="margin: 20px 5px 15px 5px;">Vorhandene Betrachtungspunkte:</h6>
+                    <div class="element-list" id="op-list">
+                        <p class="text-muted small">Keine Betrachtungspunkte vorhanden</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Excluded Areas Panel -->
+            <div class="content-panel" id="panel-excluded-areas">
+                <h6 class="menu-header">Excluded Areas</h6>
+                <button class="back-button" onclick="backToMenu()">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="button-text">Zurück zum Hauptmenü</span>
+                </button>
+                <button class="btn btn-create" onclick="startDrawingExcluded()">
+                    <i class="fas fa-plus"></i>
+                    <span>Neue Excluded Area zeichnen</span>
+                </button>
+                
+                <h6>Vorhandene Excluded Areas:</h6>
+                <div class="element-list" id="excluded-list">
+                    <p class="text-muted small">Keine Excluded Areas vorhanden</p>
+                </div>
+            </div>
+            
+            <!-- Obstacles Panel -->
+            <div class="content-panel" id="panel-obstacles">
+                <h6 class="menu-header">Hindernisse</h6>
+                <button class="back-button" onclick="backToMenu()">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="button-text">Zurück zum Hauptmenü</span>
+                </button>
+                <button class="btn btn-create" onclick="startDrawingObstacle()">
+                    <i class="fas fa-plus"></i>
+                    <span>Neues Hindernis zeichnen</span>
+                </button>
+                
+                <h6>Vorhandene Hindernisse:</h6>
+                <div class="element-list" id="obstacle-list">
+                    <p class="text-muted small">Keine Hindernisse vorhanden</p>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            <!-- Coordinate Display -->
+            <div class="coordinate-display" id="coordinateDisplay">
+                <div>
+                    <span class="coord-label">Lat:</span>
+                    <span class="coord-value" id="latDisplay">-</span>
+                </div>
+                <div>
+                    <span class="coord-label">Lng:</span>
+                    <span class="coord-value" id="lngDisplay">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Corner Details Panel (Right Sidebar) -->
+        <div id="cornerDetailsPanel" class="corner-details-panel">
+            <div class="panel-header-wrapper">
+                <h6 class="menu-header" id="cornerDetailsHeader">Eckpunkt-Koordinaten</h6>
+                <button type="button" class="btn-close btn-sm" onclick="CornerDetailsManager.close()" aria-label="Schließen"></button>
+            </div>
+            <div class="panel-body">
+                <div id="cornerDetailsContent">
+                    <!-- Content will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="modal-container">
+        <!-- PV Type Selection Modal -->
+        <div class="modal fade" id="pvTypeModal" tabindex="-1" aria-labelledby="pvTypeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="pvTypeModalLabel">PV-Anlagentyp auswählen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary text-start p-3" onclick="selectPVType('roof-parallel')">
+                                <i class="fas fa-home me-2"></i>
+                                <strong>Dachanlage mit dachparallelen Modulen</strong>
+                                <br>
+                                <small class="text-muted">Module parallel zur Dachfläche montiert</small>
+                            </button>
+                            <button class="btn btn-outline-primary text-start p-3" onclick="selectPVType('roof-mounted')">
+                                <i class="fas fa-solar-panel me-2"></i>
+                                <strong>Dachanlage mit aufgeständerten Modulen</strong>
+                                <br>
+                                <small class="text-muted">Module mit Neigung auf Flachdach</small>
+                            </button>
+                            <button class="btn btn-outline-primary text-start p-3" onclick="selectPVType('facade')">
+                                <i class="fas fa-building me-2"></i>
+                                <strong>Fassadenanlage / Vertikale PV</strong>
+                                <br>
+                                <small class="text-muted">Vertikale Module an Fassade, Zaun oder freistehend</small>
+                            </button>
+                            <button class="btn btn-outline-primary text-start p-3" onclick="selectPVType('field')">
+                                <i class="fas fa-seedling me-2"></i>
+                                <strong>Freiflächenanlage</strong>
+                                <br>
+                                <small class="text-muted">Bodengebundene PV-Anlage</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Drawing Instructions Modal -->
+        <div class="modal fade" id="drawingInstructionsModal" tabindex="-1" aria-labelledby="drawingInstructionsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="drawingInstructionsModalLabel">Zeichenanleitung</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="drawingInstructionsContent">
+                        <!-- Content will be filled dynamically -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="startDrawingAfterInstructions()">
+                            <i class="fas fa-pencil-alt"></i> Zeichnen starten
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- General Message Modal -->
+        <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="messageModalLabel">Hinweis</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="messageModalBody">
+                        <!-- Content will be filled dynamically -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Module Type Manager Modal -->
+        <div class="modal fade" id="moduleTypeModal" tabindex="-1" aria-labelledby="moduleTypeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="moduleTypeModalLabel">Modultypen verwalten</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <button class="btn btn-sm btn-primary" onclick="ModuleTypeManager.addNew()">
+                                <i class="bi bi-plus-circle"></i> Neuer Modultyp
+                            </button>
+                        </div>
+                        <div id="moduleTypesList">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add/Edit Module Type Modal -->
+        <div class="modal fade" id="moduleTypeFormModal" tabindex="-1" aria-labelledby="moduleTypeFormModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="moduleTypeFormModalLabel">Neuer Modultyp</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="moduleTypeForm">
+                            <div class="mb-3">
+                                <label for="moduleTypeName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="moduleTypeName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="moduleTypeBeamSpread" class="form-label">
+                                    Bündelaufweitung (°)
+                                    <i class="bi bi-info-circle text-muted ms-1" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top"
+                                       title="Die Bündelaufweitung definiert den Streuwinkel der Reflexion">
+                                    </i>
+                                </label>
+                                <input type="number" class="form-control" id="moduleTypeBeamSpread" 
+                                       min="0" max="10" step="0.1" value="0.5" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    Reflexionsprofil
+                                    <i class="bi bi-info-circle text-muted ms-1" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="top"
+                                       title="Leuchtdichte der Reflexion bei 100.000 lx Bestrahlungsstärke auf der Fläche für verschiedene Einfallswinkel">
+                                    </i>
+                                </label>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Einfallswinkel (°)</th>
+                                                <th>Leuchtdichte (cd/m²)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>0°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection0" min="0" step="any" value="70000"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>10°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection10" min="0" step="any" value="70000"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>20°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection20" min="0" step="any" value="71000"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>30°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection30" min="0" step="any" value="79000"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>40°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection40" min="0" step="any" value="120000"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>50°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection50" min="0" step="any" value="280000"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>60°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection60" min="0" step="any" value="930000"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>70°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection70" min="0" step="any" value="3900000"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>80°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection80" min="0" step="any" value="16134855"></td>
+                                            </tr>
+                                            <tr>
+                                                <td>90°</td>
+                                                <td><input type="number" class="form-control form-control-sm" id="reflection90" min="0" step="any" value="58377635"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="button" class="btn btn-primary" onclick="ModuleTypeManager.save()">Speichern</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PV Area Delete Confirmation Modal -->
+        <div class="modal fade" id="pvAreaDeleteModal" tabindex="-1" aria-labelledby="pvAreaDeleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="pvAreaDeleteModalLabel">
+                            <i class="bi bi-exclamation-triangle me-2"></i>PV-Fläche löschen
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="pvAreaDeleteMessage">Möchten Sie diese PV-Fläche wirklich löschen?</p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Hinweis:</strong> Alle zugehörigen Daten und Einstellungen dieser PV-Fläche werden unwiderruflich gelöscht.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeletePVArea" onclick="PVListRenderer.confirmDelete()">
+                            <i class="bi bi-trash me-1"></i>Löschen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Module Type Delete Confirmation Modal -->
+        <div class="modal fade" id="moduleTypeDeleteModal" tabindex="-1" aria-labelledby="moduleTypeDeleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="moduleTypeDeleteModalLabel">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Modultyp löschen
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="moduleTypeDeleteMessage">Möchten Sie diesen Modultyp wirklich löschen?</p>
+                        <div class="alert alert-warning d-none" id="moduleTypeInUseWarning">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Hinweis:</strong> Dieser Modultyp wird aktuell von PV-Flächen verwendet und kann nicht gelöscht werden. 
+                            Bitte ändern Sie zuerst den Modultyp der betroffenen PV-Flächen.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteModuleType" onclick="ModuleTypeManager.confirmDelete()">
+                            <i class="bi bi-trash me-1"></i>Löschen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Import Modular JavaScript before Google Maps -->
+    <script type="module">
+        // Import modules
+        import { GeometryUtils } from '/static/js/utils/geometry.js';
+        import { UIManager } from '/static/js/ui/ui-manager.js';
+        import { StateManager } from '/static/js/core/state-manager.js';
+        import { PVListRenderer } from '/static/js/ui/pv-list-renderer.js';
+        import { MapManager } from '/static/js/core/map-manager.js';
+        import { DrawingManager } from '/static/js/pv-areas/drawing-manager.js';
+        import { ModuleTypeManager } from '/static/js/ui/module-type-manager.js';
+        import { CornerDetailsManager } from '/static/js/ui/corner-details-manager.js';
+        
+        // Make modules available globally for backward compatibility
+        window.GeometryUtils = GeometryUtils;
+        window.UIManager = UIManager;
+        window.StateManager = StateManager;
+        window.MapManager = MapManager;
+        window.DrawingManager = DrawingManager;
+        window.ModuleTypeManager = ModuleTypeManager;
+        
+        // Expose individual geometry functions
+        window.rotationMatrix = GeometryUtils.rotationMatrix.bind(GeometryUtils);
+        window.matrixVectorMultiply = GeometryUtils.matrixVectorMultiply.bind(GeometryUtils);
+        window.vectorAngle = GeometryUtils.vectorAngle.bind(GeometryUtils);
+        window.calculateEffectiveValues = GeometryUtils.calculateEffectiveValues.bind(GeometryUtils);
+        window.calculateBestFitPlane = GeometryUtils.calculateBestFitPlane.bind(GeometryUtils);
+        window.getMidpoint = GeometryUtils.getMidpoint.bind(GeometryUtils);
+        window.constrainToLine = GeometryUtils.constrainToLine.bind(GeometryUtils);
+        window.calculateRectangle = GeometryUtils.calculateRectangle.bind(GeometryUtils);
+        window.calculatePerpendicularDistance = GeometryUtils.calculatePerpendicularDistance.bind(GeometryUtils);
+        
+        // Expose UI functions
+        window.showMessage = UIManager.showMessage.bind(UIManager);
+        window.showPanel = UIManager.showPanel.bind(UIManager);
+        window.backToMenu = UIManager.backToMenu.bind(UIManager);
+        window.togglePVDetails = UIManager.togglePVDetails.bind(UIManager);
+        
+        // Initialize PV List Renderer
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize StateManager to load default module types
+            await StateManager.initialize();
+            
+            PVListRenderer.initialize();
+            
+            // Load Google Maps API after modules are ready
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap&libraries=drawing,geometry,places`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        });
+        
+        // Subscribe to state changes to update UI
+        StateManager.subscribe((type, data) => {
+            // State changed: type, data
+        });
+    </script>
+    
+    <!-- Temporary: Include the rest of the original code until we modularize it -->
+    <script>
+        // Global variables (these will be gradually moved to modules)
+        let map;
+        let drawingManager;
+        let tempPolyline = null;
+        let tempPolygon = null;
+        let rectanglePoints = [];
+        let roofParallelEditor = null;
+        
+        // Initialize when page loads using MapManager
+        async function initMap() {
+            // Initialize map using MapManager
+            map = await MapManager.initialize('map');
+            drawingManager = MapManager.getDrawingManager();
+            
+            // Set up event listeners
+            MapManager.on('polygonComplete', (polygon) => {
+                // Handle polygon completion
+            });
+            
+            MapManager.on('markerComplete', (marker) => {
+                // Handle marker completion
+            });
+            
+            // Add mouse coordinate tracking
+            // Function to update coordinates
+            function updateCoordinates(event) {
+                if (event && event.latLng) {
+                    const lat = event.latLng.lat();
+                    const lng = event.latLng.lng();
+                    
+                    // Update coordinate display
+                    document.getElementById('latDisplay').textContent = lat.toFixed(6);
+                    document.getElementById('lngDisplay').textContent = lng.toFixed(6);
+                }
+            }
+            
+            // Function to clear coordinates
+            function clearCoordinates() {
+                document.getElementById('latDisplay').textContent = '-';
+                document.getElementById('lngDisplay').textContent = '-';
+            }
+            
+            // Track mouse on map
+            google.maps.event.addListener(map, 'mousemove', updateCoordinates);
+            
+            // Also track when drawing (DrawingManager captures mouse events)
+            google.maps.event.addListener(drawingManager, 'mousemove', updateCoordinates);
+            
+            // Track during overlay complete events
+            google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+                // Re-attach listener after drawing completes
+                setTimeout(() => {
+                    google.maps.event.addListener(map, 'mousemove', updateCoordinates);
+                }, 100);
+            });
+            
+            // Hide coordinates when mouse leaves map
+            google.maps.event.addListener(map, 'mouseout', clearCoordinates);
+            
+            // Alternative approach: Use DOM mouse events with overlay projection
+            const mapDiv = document.getElementById('map');
+            let lastUpdateTime = 0;
+            
+            mapDiv.addEventListener('mousemove', function(e) {
+                // Throttle updates to 60fps
+                const now = Date.now();
+                if (now - lastUpdateTime < 16) return;
+                lastUpdateTime = now;
+                
+                // Use OverlayView to get accurate projection
+                const overlay = new google.maps.OverlayView();
+                overlay.draw = function() {};
+                overlay.setMap(map);
+                
+                const projection = overlay.getProjection();
+                if (projection) {
+                    // Get mouse position relative to map container
+                    const rect = mapDiv.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    // Convert pixel coordinates to lat/lng
+                    const point = new google.maps.Point(x, y);
+                    const latLng = projection.fromContainerPixelToLatLng(point);
+                    
+                    if (latLng) {
+                        document.getElementById('latDisplay').textContent = latLng.lat().toFixed(6);
+                        document.getElementById('lngDisplay').textContent = latLng.lng().toFixed(6);
+                    }
+                    
+                    // Clean up overlay
+                    overlay.setMap(null);
+                }
+            });
+            
+            mapDiv.addEventListener('mouseleave', clearCoordinates);
+            
+            // Initialize UI
+            initializeUI();
+            
+            // Make map globally available for backward compatibility
+            window.map = map;
+            window.drawingManager = drawingManager;
+        }
+        
+        // Initialize UI using the UIManager module
+        function initializeUI() {
+            UIManager.initializeUI();
+        }
+        
+        // Show PV type selection modal
+        function showPVTypeModal() {
+            const modal = new bootstrap.Modal(document.getElementById('pvTypeModal'));
+            modal.show();
+        }
+        
+        // Handle PV type selection and show instructions
+        function selectPVType(type) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('pvTypeModal'));
+            modal.hide();
+            
+            // Store selected type
+            window.selectedPVType = type;
+            
+            // Show appropriate instructions
+            const instructionsContent = document.getElementById('drawingInstructionsContent');
+            
+            switch(type) {
+                case 'roof-parallel':
+                    instructionsContent.innerHTML = `
+                        <div class="mb-3">
+                            <h6 class="text-primary"><i class="fas fa-info-circle"></i> Dachparallele PV-Fläche</h6>
+                        </div>
+                        <div class="alert alert-info">
+                            <p class="mb-2"><strong>So zeichnen Sie die Fläche:</strong></p>
+                            <ol class="mb-0">
+                                <li>Zeichnen Sie die erste Linie entlang der oberen oder unteren Kante der PV-Fläche</li>
+                                <li>Versuchen Sie die PV-Fläche so gut es geht mit einem Viereck zu erfassen</li>
+                                <li>Das Viereck kann nach Vollendung noch frei angepasst werden</li>
+                            </ol>
+                        </div>
+                        <p class="small text-muted mb-0">
+                            <i class="fas fa-keyboard"></i> Mit <kbd>ESC</kbd> können Sie jederzeit abbrechen<br>
+                            <i class="fas fa-edit"></i> Im Nachgang können Eckpunkte, Kantenpositionen und Kantenlängen angepasst werden<br>
+                            <i class="fas fa-ban"></i> Mit der Funktion "PV-Fläche ausschließen" können Sie noch Bereiche ausschließen (z.B. Dachfenster, Schornsteine etc.), die Sie ggf. überzeichnen
+                        </p>
+                    `;
+                    break;
+                case 'roof-mounted':
+                    instructionsContent.innerHTML = `
+                        <div class="mb-3">
+                            <h6 class="text-primary"><i class="fas fa-solar-panel"></i> Aufgeständerte Dachanlage</h6>
+                        </div>
+                        <div class="alert alert-info">
+                            <p class="mb-2"><strong>So zeichnen Sie die Fläche:</strong></p>
+                            <ul class="mb-0">
+                                <li>Klicken Sie nacheinander die Eckpunkte der Aufstellfläche</li>
+                                <li>Schließen Sie das Polygon mit Doppelklick</li>
+                            </ul>
+                        </div>
+                        <p class="small text-muted mb-0">
+                            <i class="fas fa-keyboard"></i> Mit <kbd>ESC</kbd> können Sie jederzeit abbrechen
+                        </p>
+                    `;
+                    break;
+                case 'field':
+                    instructionsContent.innerHTML = `
+                        <div class="mb-3">
+                            <h6 class="text-primary"><i class="fas fa-seedling"></i> Freiflächenanlage</h6>
+                        </div>
+                        <div class="alert alert-primary">
+                            <p class="mb-2"><strong>So zeichnen Sie die Fläche:</strong></p>
+                            <ul class="mb-0">
+                                <li>Klicken Sie nacheinander die Eckpunkte der Aufstellfläche</li>
+                                <li>Schließen Sie das Polygon mit Doppelklick</li>
+                                <li>Die Fläche kann nach Erstellung angepasst werden</li>
+                            </ul>
+                        </div>
+                        <p class="small text-muted mb-0">
+                            <i class="fas fa-keyboard"></i> Mit <kbd>ESC</kbd> können Sie jederzeit abbrechen
+                        </p>
+                    `;
+                    break;
+                case 'facade':
+                    instructionsContent.innerHTML = `
+                        <div class="mb-3">
+                            <h6 class="text-primary"><i class="fas fa-building"></i> Fassadenanlage / Vertikale PV</h6>
+                        </div>
+                        <div class="alert alert-info">
+                            <p class="mb-2"><strong>So zeichnen Sie die vertikale PV-Fläche:</strong></p>
+                            <ul class="mb-0">
+                                <li>Klicken Sie auf den <strong>Startpunkt</strong></li>
+                                <li>Klicken Sie auf den <strong>Endpunkt</strong></li>
+                                <li>Eine <span style="color: #FF8C00; font-weight: bold;">orange Linie</span> zeigt die reflektierende Seite</li>
+                            </ul>
+                        </div>
+                        <div class="alert alert-warning">
+                            <small><i class="fas fa-lightbulb"></i> <strong>Tipp:</strong> Die Zeichenrichtung bestimmt die Ausrichtung. Von links nach rechts = Südausrichtung.</small>
+                        </div>
+                        <p class="small text-muted mb-0">
+                            <i class="fas fa-keyboard"></i> Mit <kbd>ESC</kbd> können Sie jederzeit abbrechen
+                        </p>
+                    `;
+                    break;
+                case 'ground':
+                    instructionsContent.innerHTML = `
+                        <div class="mb-3">
+                            <h6 class="text-primary"><i class="fas fa-seedling"></i> Freiflächenanlage</h6>
+                        </div>
+                        <div class="alert alert-info">
+                            <p class="mb-2"><strong>So zeichnen Sie die Fläche:</strong></p>
+                            <ul class="mb-0">
+                                <li>Umfahren Sie die gewünschte Fläche mit Klicks</li>
+                                <li>Schließen Sie das Polygon mit Doppelklick</li>
+                            </ul>
+                        </div>
+                        <p class="small text-muted mb-0">
+                            <i class="fas fa-keyboard"></i> Mit <kbd>ESC</kbd> können Sie jederzeit abbrechen
+                        </p>
+                    `;
+                    break;
+            }
+            
+            // Show instructions modal
+            const instructionsModal = new bootstrap.Modal(document.getElementById('drawingInstructionsModal'));
+            instructionsModal.show();
+        }
+        
+        // Start drawing after instructions
+        function startDrawingAfterInstructions() {
+            const type = window.selectedPVType;
+            
+            switch(type) {
+                case 'roof-parallel':
+                    // 3-click parallelogram for roof-parallel
+                    DrawingManager.startDrawing(DrawingManager.TYPES.ROOF_PARALLEL, 'roof-parallel');
+                    break;
+                case 'facade':
+                    // Two-point line drawing for facades
+                    DrawingManager.startDrawing(DrawingManager.TYPES.FACADE, 'facade');
+                    break;
+                case 'roof-mounted':
+                    // Polygon drawing for roof-mounted
+                    DrawingManager.startDrawing(DrawingManager.TYPES.FREEFORM, 'roof-mounted');
+                    break;
+                case 'field':
+                    // Polygon drawing for field installations (like roof-mounted)
+                    DrawingManager.startDrawing(DrawingManager.TYPES.FREEFORM, 'field');
+                    break;
+            }
+        }
+        
+        // Make functions globally available
+        window.selectPVType = selectPVType;
+        window.startDrawingAfterInstructions = startDrawingAfterInstructions;
+        
+        function startDrawingOP() {
+            UIManager.showMessage('Betrachtungspunkt zeichnen - In Entwicklung...', 'Betrachtungspunkt');
+        }
+        
+        function startDrawingExcluded() {
+            UIManager.showMessage('Excluded Area zeichnen - In Entwicklung...', 'Excluded Area');
+        }
+        
+        function startDrawingObstacle() {
+            UIManager.showMessage('Hindernis zeichnen - In Entwicklung...', 'Hindernis');
+        }
+        
+        function searchAddress() {
+            const input = document.getElementById('address-search').value;
+            if (input) {
+                UIManager.showLoading(true, 'Suche Adresse...');
+                setTimeout(() => {
+                    UIManager.showLoading(false);
+                    UIManager.showMessage(`Adresssuche für "${input}" - In Entwicklung...`, 'Adresssuche');
+                }, 1000);
+            } else {
+                UIManager.showMessage('Bitte geben Sie eine Adresse ein.', 'Adresssuche');
+            }
+        }
+        
+        // Make initMap available globally for Google Maps callback
+        window.initMap = initMap;
+    </script>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Google Maps API will be loaded dynamically after modules are ready -->
+</body>
+</html>

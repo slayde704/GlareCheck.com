@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ report_label }} | PV-GlareCheck.com</title>
+  <style>
+    @page {
+      size: A4;
+      /* 3cm oben, 1.5cm rechts und links, 2.5cm unten */
+      margin: 3cm 1.5cm 2.5cm;
+
+      /* Margin-Box für den Header */
+      @top-center {
+        content: element(header);
+      }
+      /* Footer: Seitenzahl */
+      @bottom-center {
+        /* hol Dir das richtige Wort für "Page" aus Deinem texts-Dict */
+        content: "{{ texts.page_label }} " counter(page) " / " counter(pages);
+        font-size: 0.8em;
+        color: #777;
+      }
+    }
+
+    /* markiere Deinen Header-Container als element() */
+    header.header {
+      position: running(header);
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      margin: 0;
+    }
+
+        .header-content {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      
+      /* feine Linie unter dem Text */
+      border-bottom: 1px solid #aaa;
+      padding-bottom: 0.3em;
+      /* je nach Wunsch noch etwas Abstand zum Fließtext */
+      margin-bottom: 1em;
+    }
+
+    .section {
+      page-break-before: always;
+    }
+
+    .title { text-align: center; font-size: 2em; color: #003366; margin-bottom: 0.5em; }
+    .subtitle { text-align: center; font-size: 1.5em; color: #003366; margin-top: 0; margin-bottom: 1em; }
+    .meta { text-align: center; font-size: 0.85em; margin: 0.2em 0; color: #555; }
+    .alert { text-align: center; color: red; font-weight: bold; margin: 1em 0; }
+    h2 { font-size: 1.4em; color: #000; text-align: center; margin: 1em 0 0.5em; }
+    h3 { font-size: 1.1em; color: #003366; text-align: center; margin: 0.8em 0 0.3em; }
+    .caption {
+      text-align: center;
+      font-size: 0.8em;
+      font-style: italic;
+      margin: 0.2em 0 0.5em;
+      color: #333;
+    }
+    img { display: block; margin: 0 auto 1em; max-width: 100%; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1.2em; }
+    th, td { border: 1px solid #666; padding: 0.4em; text-align: center; font-size: 0.9em; }
+    th { background: #ddd; }
+    .traffic td:first-child { font-weight: bold; }
+    .traffic td.green { background: #c8e6c9; }
+    .traffic td.yellow { background: #fff9c4; }
+    .traffic td.red { background: #ffcdd2; }
+
+    /* Impact-Level Tabelle einfärben */
+    table.impact td.green { background-color: #c8e6c9; }
+    table.impact td.yellow { background-color: #fff9c4; }
+    table.impact td.red { background-color: #ffcdd2; }
+
+    /* global: neuen Zähler für alle <figure> und <table> anlegen */
+    html {
+      counter-reset: figure table;
+    }
+
+    /* bei jedem <figure> hochzählen */
+    figure {
+      counter-increment: figure;
+    }
+
+    /* Caption voranstellen */
+    figcaption.caption::before {
+      content: "Figure " counter(figure) ": ";
+      font-weight: bold;
+    }
+
+    /* Table-Counter hochzählen */
+    table caption.caption {
+      counter-increment: table;
+    }
+
+    /* Caption prefix für Tabellen */
+    table caption.caption::before {
+      content: "Table " counter(table) ": ";
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      {{ report_label }} | PV-GlareCheck.com
+    </div>
+  </header>
+
+  <!-- Titelseite -->
+  <div class="section" id="title-page">
+    <img src="logo.png" alt="Logo" style="width: 200px;"/>
+    <div class="title">{{ report_label }}</div>
+    <div class="subtitle">{{ project_name }}</div>
+    <div style="margin-top: 20em;"></div> <!-- Einiger Abstand -->
+    {% if free_version_alert %}
+      <div class="alert">{{ free_version_alert }}</div>
+    {% endif %}
+    <div class="meta">{{ user_id }}</div>
+    <div class="meta">{{ project_id }}</div>
+    <div class="meta">{{ simulation_id }}</div>
+    <div class="meta">{{ timestamp }}</div>
+    <div class="meta">{{ version_calculator }}</div>
+  </div>
+
+  <!-- Inhaltsverzeichnis -->
+  <div class="section" id="toc">
+    <h2>{{ texts.table_of_contents }}</h2>
+    <ol>
+      <li><a href="#overview-map">{{ overview_map }}</a></li>
+      <li><a href="#simulation-parameters">{{ simulation_parameters }}</a></li>
+      <li><a href="#evaluation-of-results">{{ evaluation_of_results }}</a></li>
+      <li><a href="#summary-of-results">{{ summary_of_results }}</a></li>
+      <li><a href="#impact-level-assessment">{{ impact_level_assessment }}</a></li>
+      <li><a href="#pv-areas-details">{{ pv_areas_details }}</a></li>
+      <li><a href="#pv-areas-details">{{ corner_points_caption }}</a></li>
+      <li><a href="#detection-points-details">{{ detection_points_details }}</a></li>
+      {% for i in range(1, num_dps+1) %}
+        <li><a href="#dp-{{ i }}">{{ texts.detection_point_details }} {{ i }}</a></li>
+      {% endfor %}
+      <li><a href="#disclaimer">{{ disclaimer_label }}</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. Overview Map -->
+  <div class="section" id="overview-map">
+    <h2>1. {{ overview_map }}</h2>
+    <figure>
+      <img src="pv_area_map.jpeg" alt="Overview map"/>
+      <figcaption class="caption">{{ overview_map_caption }}</figcaption>
+    </figure>
+  </div>
+
+  <!-- 2. Simulation Parameters -->
+  <div class="section" id="simulation-parameters">
+    <h2>2. {{ simulation_parameters }}</h2>
+    <table>
+      <caption class="caption">{{ simulation_parameters_caption }}</caption>
+      <tr><th>{{ texts.parameter }}</th><th>{{ texts.value }}</th><th>{{ texts.description }}</th></tr>
+      {% for row in simulation_parameters_table %}
+        <tr>
+          <td>{{ row[0] }}</td>
+          <td>{{ row[1] }}</td>
+          <td>{{ row[2] }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    <!-- Module Reflection Profile innerhalb der Simulationsparameter -->
+    <figure>
+      <img src="reflection_profile.png" alt="Reflection profile" style="width: 60%; max-width: 400px;"/>
+      <figcaption class="caption">{{ reflection_profile_caption }}</figcaption>
+    </figure>
+  </div>
+
+  <!-- 3. Evaluation of Results -->
+  <div class="section" id="evaluation-of-results">
+    <h2>3. {{ evaluation_of_results }}</h2>
+    <p>{{ evaluation_text|safe }}</p>
+    <table class="traffic">
+      <caption class="caption">{{ traffic_light_caption }}</caption>
+      <tr><th>{{ texts.color }}</th><th>{{ texts.impact_level }}</th><th>{{ texts.description }}</th></tr>
+      {% for row in traffic_data %}
+        {% set color_name = row[0].lower() %}
+        {% set css_class = "green" %}
+        {% if color_name == "gelb" or color_name == "yellow" %}
+          {% set css_class = "yellow" %}
+        {% elif color_name == "rot" or color_name == "red" %}
+          {% set css_class = "red" %}
+        {% endif %}
+        <tr>
+          <td class="{{ css_class }}">{{ row[0] }}</td>
+          <td>{{ row[1] }}</td>
+          <td style="text-align:left;">{{ row[2] }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    <p>{{ traffic_light_description }}</p>
+  </div>
+
+  <!-- 4. Summary of Results -->
+  <div class="section" id="summary-of-results">
+    <h2>4. {{ summary_of_results }}</h2>
+    <p>{{ summary_of_results_text }}</p>
+    <table>
+      <caption class="caption">{{ summary_of_results_caption }}</caption>
+      <tr>
+        <th>{{ texts.dp_number }}</th>
+        <th>{{ texts.max_glare_per_day }}</th>
+        <th>{{ texts.glare_per_year }}</th>
+        <th>{{ texts.days_with_glare }}</th>
+        <th>{{ texts.days_over_30min }}</th>
+        <th>{{ texts.days_over_60min }}</th>
+        <th>{{ texts.days_over_120min }}</th>
+      </tr>
+      {% for row in summary %}
+        <tr>
+          {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- 5. Impact Level Assessment -->
+  <div class="section" id="impact-level-assessment">
+    <h2>5. {{ impact_level_assessment }}</h2>
+    <table class="impact">
+      <caption class="caption">{{ impact_level_assessment_caption }}</caption>
+      <tr><th>{{ texts.dp_number }}</th><th>{{ texts.impact_level }}</th></tr>
+      {% for row in impact_data %}
+        <tr>
+          <td>{{ row[0] }}</td>
+          <td class="{{ row[2] }}">{{ row[1] }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- 6. PV Areas Details -->
+  <div class="section" id="pv-areas-details">
+    <h2>6. {{ pv_areas_details }}</h2>
+    <table>
+      <caption class="caption">{{ pv_areas_details_caption }}</caption>
+      <tr><th>{{ texts.pv_area }}</th><th>{{ texts.azimuth }}</th><th>{{ texts.tilt }}</th></tr>
+      {% for row in pv_area_data %}
+        <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td><td>{{ row[2] }}</td></tr>
+      {% endfor %}
+    </table>
+
+    <!-- Page break vor Corner-Points -->
+    <div style="page-break-before: always;"></div>
+
+    <!-- Corner Points als Teil von 6 -->
+    <table>
+      <caption class="caption">{{ corner_points_caption }}</caption>
+      <tr>
+        <th>{{ texts.pv_area }}</th>
+        <th>{{ texts.latitude }}</th>
+        <th>{{ texts.longitude }}</th>
+        <th>{{ texts.ground_elevation }}</th>
+        <th>{{ texts.height_above }}</th>
+      </tr>
+      {% for row in corner_data %}
+        <tr>{% for c in row %}<td>{{ c }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- 8. Detection Points Details -->
+  <div class="section" id="detection-points-details">
+    <h2>8. {{ detection_points_details }}</h2>
+    <table>
+      <caption class="caption">{{ detection_points_details_caption }}</caption>
+      <tr>
+        <th>{{ texts.dp_number }}</th>
+        <th>{{ texts.latitude }}</th>
+        <th>{{ texts.longitude }}</th>
+        <th>{{ texts.ground_elevation }}</th>
+        <th>{{ texts.height_above }}</th>
+      </tr>
+      {% for row in dps_data %}
+        <tr>{% for c in row %}<td>{{ c }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- 8.1+. Per-DP Figures -->
+  {% for dp in range(1, num_dps+1) %}
+    <div class="section" id="dp-{{ dp }}">
+      <h3>{{ texts.detection_point_details }} {{ dp }} Details</h3>
+      {# 3 Glare-Plots #}
+      {% for glare_type in ['periods','duration','intensity'] %}
+        <figure>
+          <img src="{{ glare_imgs[dp][glare_type] }}" alt="{{ glare_type }} for DP {{ dp }}"/>
+          <figcaption class="caption">
+            {{ texts["glare_" ~ glare_type ~ "_label"] }} for {{ texts.detection_point_details }} {{ dp }}.
+          </figcaption>
+        </figure>
+        {% if glare_type == 'duration' %}
+          <div style="page-break-after: always;"></div>
+        {% endif %}
+      {% endfor %}
+
+      {# jetzt alle Perspektiv-Bilder ausgeben #}
+      {% for img in perspective_imgs[dp] %}
+        <figure>
+          <img src="{{ img }}" alt="Perspective view {{ loop.index }} for DP {{ dp }}"/>
+          <figcaption class="caption">{{ texts.perspective_view_label }} {{ loop.index }} for {{ texts.detection_point_details }} {{ dp }}.</figcaption>
+        </figure>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <!-- Page break vor Disclaimer -->
+  <div style="page-break-before: always;"></div>
+
+  <!-- Disclaimer -->
+  <section class="disclaimer" id="disclaimer">
+    <h2>{{ disclaimer_label }}</h2>
+    <p>{{ disclaimer_text | safe }}</p>
+  </section>
+
+</body>
+</html>

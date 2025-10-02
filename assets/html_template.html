@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ report_label }} | PV-GlareCheck.com</title>
+  <style>
+    /* Font-Face Definitionen für bessere Kompatibilität */
+    @font-face {
+      font-family: 'ReportFont';
+      src: url('{{ FONTS_DIR }}/LiberationSans-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'ReportFont';
+      src: url('{{ FONTS_DIR }}/LiberationSans-Bold.ttf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    @page {
+      size: A4;
+      margin: 2cm 1.5cm 2.5cm; /* Reduziert von 3cm auf 2cm oben */
+      -weasy-dpi: 96; /* Feste DPI-Einstellung */
+
+      /* Header mit Gradient-Hintergrund */
+      @top-center {
+        content: element(header);
+        width: 100%;
+        margin: 0;
+      }
+      
+      /* Footer mit Linie und Seitenzahl */
+      @bottom-center {
+        content: element(footer);
+        width: 100%;
+        margin: 0;
+      }
+    }
+
+    /* Header-Element definieren */
+    header.header {
+      position: running(header);
+      background: linear-gradient(135deg, #4274a5 0%, #5a87c7 100%);
+      color: white;
+      padding: 0.6em 0.6em;
+      display: flex;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10pt; /* Absolute Größe statt 0.85em */
+      font-weight: 500;
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header-left {
+      font-weight: 600;
+      flex: 2;
+      text-align: left;
+    }
+
+    .header-right {
+      font-size: 9pt; /* Absolute Größe statt 0.8em */
+      opacity: 0.95;
+      border-left: 1px solid rgba(255,255,255,0.3);
+      padding-left: 1em;
+      margin-left: 1em;
+      flex: 1;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Footer-Element definieren */
+    footer.footer {
+      position: running(footer);
+      padding-top: 0.5em;
+      border-top: 2px solid #4274a5;
+      color: #666;
+      font-size: 9pt; /* Absolute Größe */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .footer-left {
+      font-size: 8pt; /* Absolute Größe */
+      color: #888;
+      font-style: italic;
+      flex: 1;
+    }
+
+    .footer-center {
+      font-weight: 500;
+      text-align: center;
+      flex: 1;
+      white-space: nowrap;
+    }
+
+    .footer-right {
+      flex: 1;
+    }
+
+    html {
+      font-size: 12pt; /* Basis-Schriftgröße absolut */
+    }
+
+    body {
+      font-family: 'ReportFont', 'Liberation Sans', 'DejaVu Sans', 'Bitstream Vera Sans', Arial, sans-serif;
+      margin: 0;
+      line-height: 1.6;
+      color: #333;
+      font-size: 12pt; /* Absolute Größe */
+    }
+
+    .section {
+      page-break-before: always;
+    }
+
+    /* Titelseite Design */
+    #title-page {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 30%, #e2e8f0 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 2em;
+    }
+
+    /* Dekorative Elemente für Titelseite - subtiler */
+    #title-page::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -15%;
+      width: 40%;
+      height: 120%;
+      background: linear-gradient(45deg, rgba(66,116,165,0.03) 0%, rgba(255,193,7,0.05) 100%);
+      transform: rotate(12deg);
+      z-index: 1;
+      border-radius: 50px;
+    }
+
+    #title-page::after {
+      content: '';
+      position: absolute;
+      bottom: -20%;
+      left: -15%;
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(-45deg, rgba(66,116,165,0.02) 0%, rgba(255,193,7,0.03) 100%);
+      transform: rotate(-8deg);
+      z-index: 1;
+      border-radius: 50px;
+    }
+
+    .title-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .logo-container {
+      margin-bottom: 2em;
+    }
+
+    .logo-container img {
+      width: 200px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+    }
+
+    .title { 
+      font-size: 30pt; /* Absolute Größe statt 2.5em */
+      color: #4274a5; 
+      margin-bottom: 0.3em;
+      font-weight: 300;
+      letter-spacing: -1px;
+    }
+
+    .subtitle { 
+      font-size: 22pt; /* Absolute Größe statt 1.8em */
+      color: #ffc107; 
+      margin: 0 0 2em 0;
+      font-weight: 400;
+    }
+
+    .meta-container {
+      background: rgba(248,250,252,0.8);
+      padding: 1.5em;
+      border-radius: 10px;
+      border-left: 4px solid #ffc107;
+      margin-top: 2em;
+      backdrop-filter: blur(5px);
+    }
+
+    .meta { 
+      font-size: 11pt; /* Absolute Größe statt 0.9em */
+      margin: 0.3em 0; 
+      color: #555;
+      text-align: left;
+    }
+
+    .alert { 
+      background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+      color: white;
+      padding: 1em 2em;
+      border-radius: 25px;
+      font-weight: bold;
+      margin: 2em 0;
+      box-shadow: 0 4px 15px rgba(255,71,87,0.3);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Überschriften */
+    h2 { 
+      font-size: 19pt; /* Absolute Größe statt 1.6em */
+      color: #4274a5; 
+      text-align: center; 
+      margin: 1.5em 0 1em;
+      position: relative;
+      padding-bottom: 0.5em;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: #4274a5;
+      border-radius: 2px;
+    }
+
+    h3 { 
+      font-size: 14pt; /* Absolute Größe statt 1.2em */
+      color: #4274a5; 
+      text-align: center; 
+      margin: 1em 0 0.5em;
+    }
+
+    .caption {
+      text-align: center;
+      font-size: 10pt; /* Absolute Größe statt 0.85em */
+      font-style: italic;
+      margin: 0.3em 0 0.5em; /* Reduziert Abstände */
+      color: #666;
+      background: #f8fafc;
+      padding: 0.3em 0.8em; /* Reduziert padding */
+      border-radius: 5px;
+      border-left: 3px solid #ffc107;
+    }
+
+    /* Bilder */
+    img { 
+      display: block; 
+      margin: 0 auto 0.5em; /* Reduziert von 1em auf 0.5em */
+      max-width: 90%; /* 10% kleiner */
+      max-height: 4in; /* Reduziert von 4.5in auf 4in */
+      width: auto;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    /* Speziell für Overview Map - so groß wie möglich */
+    #overview-map img {
+      max-width: 100%;
+      max-height: 8in; /* Erlaubt bis zu 8 Zoll Höhe */
+      width: auto;
+      height: auto;
+    }
+
+    /* Tabellen */
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 1.5em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td { 
+      border: 1px solid #ddd; 
+      padding: 0.6em; 
+      text-align: center; 
+      font-size: 10pt; /* Absolute Größe statt 0.9em */
+    }
+
+    th { 
+      background: linear-gradient(135deg, #4274a5 0%, #5a87c7 100%);
+      color: white;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 9pt; /* Absolute Größe statt 0.8em */
+      letter-spacing: 0.5px;
+    }
+
+    tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+
+    tr:hover {
+      background: #e3f2fd;
+      transition: background 0.3s ease;
+    }
+
+    /* Traffic Light Tabelle */
+    .traffic td:first-child { 
+      font-weight: bold; 
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    .traffic td.green { background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); }
+    .traffic td.yellow { background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); }
+    .traffic td.red { background: linear-gradient(135deg, #f44336 0%, #ef5350 100%); }
+
+    /* Impact-Level Tabelle */
+    table.impact td.green { 
+      background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    table.impact td.yellow { 
+      background: linear-gradient(135deg, #fff9c4 0%, #fff176 100%);
+      font-weight: bold;
+      color: #f57f17;
+    }
+    table.impact td.red { 
+      background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+      font-weight: bold;
+      color: #c62828;
+    }
+
+    /* Zähler für Figuren und Tabellen - SPRACHABHÄNGIG */
+    html {
+      counter-reset: figure table;
+    }
+
+    figure {
+      counter-increment: figure;
+      margin: 1em 0; /* Reduziert von 2em auf 1em */
+    }
+
+    /* Deutsche Figuren-Beschriftungen */
+    html[lang="de"] figcaption.caption::before {
+      content: "Abbildung " counter(figure) ": ";
+      font-weight: bold;
+      color: #4274a5;
+    }
+
+    /* Englische Figuren-Beschriftungen */
+    html[lang="en"] figcaption.caption::before {
+      content: "Figure " counter(figure) ": ";
+      font-weight: bold;
+      color: #4274a5;
+    }
+
+    table caption.caption {
+      counter-increment: table;
+      margin-bottom: 1em;
+    }
+
+    /* Deutsche Tabellen-Beschriftungen */
+    html[lang="de"] table caption.caption::before {
+      content: "Tabelle " counter(table) ": ";
+      font-weight: bold;
+      color: #4274a5;
+    }
+
+    /* Englische Tabellen-Beschriftungen */
+    html[lang="en"] table caption.caption::before {
+      content: "Table " counter(table) ": ";
+      font-weight: bold;
+      color: #4274a5;
+    }
+
+    /* Inhaltsverzeichnis */
+    #toc ol {
+      background: #f8fafc;
+      padding: 2em;
+      border-radius: 10px;
+      border-left: 4px solid #ffc107;
+    }
+
+    #toc ol li {
+      margin: 0.5em 0;
+      padding: 0.3em 0;
+    }
+
+    #toc ol li a {
+      color: #4274a5;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    #toc ol li a:hover {
+      color: #ffc107;
+      text-decoration: underline;
+    }
+
+    /* Spezielle Seitenumbrüche */
+    .page-break-after-table1 {
+      page-break-after: always;
+    }
+    
+    .page-break-before-table2 {
+      page-break-before: always;
+    }
+
+    /* CSS Counter für Seitenzahlen */
+    .page-counter::after {
+      content: counter(page) " / " counter(pages);
+      white-space: nowrap;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 10px;
+      padding: 2em;
+      border-left: 5px solid #ff9800;
+    }
+
+    .disclaimer h2 {
+      color: #856404;
+    }
+
+    .disclaimer p {
+      color: #856404;
+      line-height: 1.8;
+    }
+
+    /* WeasyPrint-spezifische Anpassungen */
+    @media print {
+      html {
+        -weasy-dpi: 96 !important;
+        font-size: 12pt !important;
+      }
+      
+      header.header {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+      }
+      
+      .header-content {
+        display: flex !important;
+        width: 100% !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      
+      /* Verhindere Font-Substitution */
+      * {
+        -webkit-font-feature-settings: normal;
+        font-feature-settings: normal;
+        -weasy-font-variant-ligatures: none;
+      }
+      
+      body {
+        font-family: 'ReportFont', 'Liberation Sans', 'DejaVu Sans', Arial, sans-serif !important;
+        font-size: 12pt !important;
+      }
+      
+      /* Explizite Schriftgrößen für alle Elemente */
+      p, td, li { font-size: 12pt !important; }
+      h2 { font-size: 19pt !important; }
+      h3 { font-size: 14pt !important; }
+      th { font-size: 9pt !important; }
+      .caption { font-size: 10pt !important; }
+      .header-left { font-size: 10pt !important; }
+      .header-right { font-size: 9pt !important; }
+      .footer-center { font-size: 9pt !important; }
+      .footer-left { font-size: 8pt !important; }
+      .meta { font-size: 11pt !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="header-left">{{ report_label }} | PV-GlareCheck.com</div>
+      <div class="header-right">{{ project_name }}</div>
+    </div>
+  </header>
+
+  <footer class="footer">
+    <div class="footer-left">
+      <span id="current-section"></span>
+    </div>
+    <div class="footer-center">
+      {{ texts.page_label }} <span class="page-counter"></span>
+    </div>
+    <div class="footer-right"></div>
+  </footer>
+
+  <script>
+    // Vereinfachtes JavaScript für bessere Browser-Kompatibilität
+    document.addEventListener('DOMContentLoaded', function() {
+      // Kapitel-Tracking
+      const sections = {
+        'title-page': 'Titelseite',
+        'toc': 'Inhaltsverzeichnis', 
+        'overview-map': '1. {{ overview_map }}',
+        'simulation-parameters': '2. {{ simulation_parameters }}',
+        'evaluation-of-results': '3. {{ evaluation_of_results }}',
+        'summary-of-results': '4. {{ summary_of_results }}',
+        'impact-level-assessment': '5. {{ impact_level_assessment }}',
+        'pv-areas-details': '6. {{ pv_areas_details }}',
+        'detection-points-details': '8. {{ detection_points_details }}',
+        'disclaimer': '{{ disclaimer_label }}'
+      };
+    });
+  </script>
+
+  <!-- Titelseite -->
+  <div class="section" id="title-page">
+    <div class="title-content">
+      <div class="logo-container">
+        <img src="logo.png" alt="Logo"/>
+      </div>
+      <div class="title">{{ report_label }}</div>
+      <div class="subtitle">{{ project_name }}</div>
+      
+      {% if free_version_alert %}
+        <div class="alert">{{ free_version_alert }}</div>
+      {% endif %}
+      
+      <div class="meta-container">
+        <div class="meta">{{ user_id }}</div>
+        <div class="meta">{{ project_id }}</div>
+        <div class="meta">{{ simulation_id }}</div>
+        <div class="meta">{{ timestamp }}</div>
+        <div class="meta">{{ version_calculator }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inhaltsverzeichnis -->
+  <div class="section" id="toc">
+    <h2>{{ texts.table_of_contents }}</h2>
+    <ol>
+      <li><a href="#overview-map">{{ overview_map }}</a></li>
+      <li><a href="#simulation-parameters">{{ simulation_parameters }}</a></li>
+      <li><a href="#evaluation-of-results">{{ evaluation_of_results }}</a></li>
+      <li><a href="#summary-of-results">{{ summary_of_results }}</a></li>
+      <li><a href="#impact-level-assessment">{{ impact_level_assessment }}</a></li>
+      <li><a href="#pv-areas-details">{{ pv_areas_details }}</a></li>
+      <li><a href="#detection-points-details">{{ detection_points_details }}</a></li>
+      {% for i in range(1, num_dps+1) %}
+        <li><a href="#dp-{{ i }}">{{ texts.detection_point_details }} {{ dp_names[i] }}</a></li>
+      {% endfor %}
+      <li><a href="#disclaimer">{{ disclaimer_label }}</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. Overview Map -->
+  <div class="section" id="overview-map">
+    <h2>1. {{ overview_map }}</h2>
+    <figure class="overview-map-figure">
+      <img src="pv_area_map.jpeg" alt="Overview map" class="overview-map-img"/>
+      <figcaption class="caption">{{ overview_map_caption }}</figcaption>
+    </figure>
+  </div>
+
+  <!-- 2. Simulation Parameters -->
+  <div class="section" id="simulation-parameters">
+    <h2>2. {{ simulation_parameters }}</h2>
+    <table>
+      <caption class="caption">{{ simulation_parameters_caption }}</caption>
+      <tr><th>{{ texts.parameter }}</th><th>{{ texts.value }}</th><th>{{ texts.description }}</th></tr>
+      {% for row in simulation_parameters_table %}
+        <tr>
+          <td>{{ row[0] }}</td>
+          <td>{{ row[1] }}</td>
+          <td>{{ row[2] }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    <div class="page-break-after-table1"></div>
+    <!-- Module Reflection Profile innerhalb der Simulationsparameter -->
+    <figure>
+      <img src="reflection_profile.png" alt="Reflection profile" style="width: 60%; max-width: 400px;"/>
+      <figcaption class="caption">{{ reflection_profile_caption }}</figcaption>
+    </figure>
+  </div>
+
+  <!-- 3. Evaluation of Results -->
+  <div class="section page-break-before-table2" id="evaluation-of-results">
+    <h2>3. {{ evaluation_of_results }}</h2>
+    <p>{{ evaluation_text|safe }}</p>
+    <div class="page-break-before-table2"></div>
+    <table class="traffic">
+      <caption class="caption">{{ traffic_light_caption }}</caption>
+      <tr><th>{{ texts.color }}</th><th>{{ texts.impact_level }}</th><th>{{ texts.description }}</th></tr>
+      {% for row in traffic_data %}
+        {% set color_name = row[0].lower() %}
+        {% set css_class = "green" %}
+        {% if color_name == "gelb" or color_name == "yellow" %}
+          {% set css_class = "yellow" %}
+        {% elif color_name == "rot" or color_name == "red" %}
+          {% set css_class = "red" %}
+        {% endif %}
+        <tr>
+          <td class="{{ css_class }}">{{ row[0] }}</td>
+          <td>{{ row[1] }}</td>
+          <td style="text-align:left;">{{ row[2] }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    <p>{{ traffic_light_description }}</p>
+  </div>
+
+  <!-- 4. Summary of Results -->
+  <div class="section" id="summary-of-results">
+    <h2>4. {{ summary_of_results }}</h2>
+    <p>{{ summary_of_results_text }}</p>
+    <table>
+      <caption class="caption">{{ summary_of_results_caption }}</caption>
+      <tr>
+        <th>{{ texts.dp_number }}</th>
+        <th>{{ texts.max_glare_per_day }}</th>
+        <th>{{ texts.glare_per_year }}</th>
+        <th>{{ texts.days_with_glare }}</th>
+        <th>{{ texts.days_over_30min }}</th>
+        <th>{{ texts.days_over_60min }}</th>
+        <th>{{ texts.days_over_120min }}</th>
+      </tr>
+      {% for row in summary %}
+        <tr>
+          {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- 5. Impact Level Assessment -->
+  <div class="section" id="impact-level-assessment">
+    <h2>5. {{ impact_level_assessment }}</h2>
+    <table class="impact">
+      <caption class="caption">{{ impact_level_assessment_caption }}</caption>
+      <tr><th>{{ texts.dp_number }}</th><th>{{ texts.impact_level }}</th></tr>
+      {% for row in impact_data %}
+        <tr>
+          <td>{{ row[0] }}</td>
+          <td class="{{ row[2] }}">{{ row[1] }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- 6. PV Areas Details -->
+  <div class="section" id="pv-areas-details">
+    <h2>6. {{ pv_areas_details }}</h2>
+    <table>
+      <caption class="caption">{{ pv_areas_details_caption }}</caption>
+      <tr><th>{{ texts.pv_area }}</th><th>{{ texts.azimuth }}</th><th>{{ texts.tilt }}</th></tr>
+      {% for row in pv_area_data %}
+        <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td><td>{{ row[2] }}</td></tr>
+      {% endfor %}
+    </table>
+
+    <!-- Page break vor Corner-Points -->
+    <div style="page-break-before: always;"></div>
+
+    <!-- Corner Points als Teil von 6 -->
+    <table>
+      <caption class="caption">{{ corner_points_caption }}</caption>
+      <tr>
+        <th>{{ texts.pv_area }}</th>
+        <th>{{ texts.latitude }}</th>
+        <th>{{ texts.longitude }}</th>
+        <th>{{ texts.ground_elevation }}</th>
+        <th>{{ texts.height_above }}</th>
+      </tr>
+      {% for row in corner_data %}
+        <tr>{% for c in row %}<td>{{ c }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- 8. Detection Points Details -->
+  <div class="section" id="detection-points-details">
+    <h2>8. {{ detection_points_details }}</h2>
+    <table>
+      <caption class="caption">{{ detection_points_details_caption }}</caption>
+      <tr>
+        <th>{{ texts.dp_number }}</th>
+        <th>{{ texts.latitude }}</th>
+        <th>{{ texts.longitude }}</th>
+        <th>{{ texts.ground_elevation }}</th>
+        <th>{{ texts.height_above }}</th>
+      </tr>
+      {% for row in dps_data %}
+        <tr>{% for c in row %}<td>{{ c }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- 8.1+. Per-DP Figures -->
+  {% for dp in range(1, num_dps+1) %}
+    <div class="section" id="dp-{{ dp }}">
+      <h3>{{ texts.detection_point_details }} {{ dp_names[dp] }} Details</h3>
+      {# Glare Periods #}
+      <figure>
+        <img src="{{ glare_imgs[dp]['periods'] }}" alt="periods for DP {{ dp }}"/>
+        <figcaption class="caption">
+          {{ texts["glare_periods_label"] }} für {{ texts.detection_point_details }} {{ dp_names[dp] }}.
+        </figcaption>
+      </figure>
+      
+      {# Glare Duration #}
+      <figure>
+        <img src="{{ glare_imgs[dp]['duration'] }}" alt="duration for DP {{ dp }}"/>
+        <figcaption class="caption">
+          {{ texts["glare_duration_label"] }} für {{ texts.detection_point_details }} {{ dp_names[dp] }}.
+        </figcaption>
+      </figure>
+      
+      {# Page break after Duration #}
+      <div style="page-break-after: always;"></div>
+      
+      {# Glare Intensity #}
+      <figure>
+        <img src="{{ glare_imgs[dp]['intensity'] }}" alt="intensity for DP {{ dp }}"/>
+        <figcaption class="caption">
+          {{ texts["glare_intensity_label"] }} für {{ texts.detection_point_details }} {{ dp_names[dp] }}.
+        </figcaption>
+      </figure>
+
+      {# Perspektiv-Bild (erstes) auf gleicher Seite wie Intensity #}
+      {% if perspective_imgs[dp] %}
+        <figure>
+          <img src="{{ perspective_imgs[dp][0] }}" alt="Perspective view for DP {{ dp }}"/>
+          <figcaption class="caption">{{ texts.perspective_view_label }} für {{ texts.detection_point_details }} {{ dp_names[dp] }}.</figcaption>
+        </figure>
+        
+        {# Weitere Perspektiv-Bilder auf neuen Seiten #}
+        {% for img in perspective_imgs[dp][1:] %}
+          <div style="page-break-before: always;"></div>
+          <figure>
+            <img src="{{ img }}" alt="Perspective view for DP {{ dp }}"/>
+            <figcaption class="caption">{{ texts.perspective_view_label }} für {{ texts.detection_point_details }} {{ dp_names[dp] }}.</figcaption>
+          </figure>
+        {% endfor %}
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <!-- Page break vor Disclaimer -->
+  <div style="page-break-before: always;"></div>
+
+  <!-- Disclaimer -->
+  <section class="disclaimer" id="disclaimer">
+    <h2>{{ disclaimer_label }}</h2>
+    <p>{{ disclaimer_text | safe }}</p>
+  </section>
+
+</body>
+</html>

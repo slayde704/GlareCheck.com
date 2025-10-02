@@ -1,0 +1,44 @@
+{
+    "moduleTypes": [
+        {
+            "id": 0,
+            "name": "Standard Modul",
+            "manufacturer": "Generic",
+            "model": "Standard",
+            "beamSpread": 0.5,
+            "isProtected": true,
+            "reflectionProfile": {
+                "0": 70000,
+                "10": 70000,
+                "20": 71000,
+                "30": 79000,
+                "40": 120000,
+                "50": 280000,
+                "60": 930000,
+                "70": 3900000,
+                "80": 16134855,
+                "90": 58377635
+            }
+        },
+        {
+            "id": 1,
+            "name": "Anti-Reflex Modul",
+            "manufacturer": "Phytonics",
+            "model": "Anti-Glare",
+            "beamSpread": 40,
+            "isProtected": true,
+            "reflectionProfile": {
+                "0": 2800,
+                "10": 2900,
+                "20": 3200,
+                "30": 3900,
+                "40": 5400,
+                "50": 9500,
+                "60": 21000,
+                "70": 65000,
+                "80": 180000,
+                "90": 510000
+            }
+        }
+    ]
+}

@@ -1,0 +1,12 @@
+xlsxwriter
+numpy
+pandas
+matplotlib
+Pillow
+pvlib
+pyproj
+scipy
+requests
+shapely
+geopy
+reportlab
