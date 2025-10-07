@@ -26,14 +26,26 @@ export const TopographySourceManager = {
         // Check if source was previously selected (localStorage)
         const savedSource = localStorage.getItem('topoSource');
         if (savedSource) {
+            // If it's custom but we don't have the actual data, reset
+            if (savedSource === 'custom' && (!this.customDataGrid || this.customDataGrid.length === 0)) {
+                console.warn('Custom data source saved but no data found - resetting');
+                localStorage.removeItem('topoSource');
+                localStorage.removeItem('topoCustomFile');
+                this.lockMenuItems();
+                return;
+            }
+
             this.sourceType = savedSource;
             this.isConfigured = true;
             this.unlockMenuItems();
 
             // Show/hide elevation display based on saved source
+            // Only show if custom AND we actually have data (not just type saved)
             const elevDisplay = document.getElementById('elevationDisplay');
             if (elevDisplay) {
-                if (savedSource === 'custom') {
+                // For custom data, verify we actually have the data loaded
+                // (customDataGrid would be populated if data was really loaded)
+                if (savedSource === 'custom' && this.customDataGrid && this.customDataGrid.length > 0) {
                     elevDisplay.style.display = 'block';
                 } else {
                     elevDisplay.style.display = 'none';

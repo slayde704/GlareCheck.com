@@ -1661,11 +1661,12 @@
 
                 if (!elevDisplay || !elevValue) return;
 
-                // Debug: Log the source type (temporary - remove after testing)
-                console.log('updateElevationDisplay - topoInfo:', topoInfo);
-
-                // Only show elevation if custom data is loaded
-                if (topoInfo && topoInfo.type === 'custom' && topoInfo.isConfigured) {
+                // Only show elevation if custom data is loaded AND has actual data
+                if (topoInfo &&
+                    topoInfo.type === 'custom' &&
+                    topoInfo.isConfigured &&
+                    topoInfo.customFile &&
+                    topoInfo.bounds) {
                     // Show elevation row
                     elevDisplay.style.display = 'block';
 
