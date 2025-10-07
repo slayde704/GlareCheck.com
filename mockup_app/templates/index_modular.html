@@ -777,8 +777,8 @@
         .topo-option-card:hover {
             border-color: var(--primary-blue);
             background: #f8fafc;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(66, 116, 165, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(66, 116, 165, 0.1);
         }
 
         .topo-option-icon {
@@ -788,14 +788,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, var(--primary-blue) 0%, #5a8bc4 100%);
+            background: var(--primary-blue);
             color: white;
-            border-radius: 10px;
-            font-size: 1.5rem;
+            border-radius: 8px;
+            font-size: 1.4rem;
         }
 
         .topo-icon-custom {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            background: #64748b;
         }
 
         .topo-option-content {
@@ -1754,6 +1754,17 @@
             // Initialize Topography Source Manager
             TopographySourceManager.initialize();
 
+            // Add global click handler for locked menu items
+            document.addEventListener('click', (e) => {
+                const menuItem = e.target.closest('.menu-item');
+                if (menuItem && menuItem.getAttribute('data-locked') === 'true') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
+                    UIManager.showNotification(t('topo.requiredMessage'), 'warning');
+                }
+            }, true); // Use capture phase to catch before other handlers
+
             // Make map globally available for backward compatibility
             window.map = map;
             window.drawingManager = drawingManager;
@@ -1956,7 +1967,11 @@
         }
 
         // Initialize drag & drop zone
+        let dropZoneInitialized = false;
+
         function initializeDropZone() {
+            if (dropZoneInitialized) return; // Only initialize once
+
             const dropZone = document.getElementById('topo-drop-zone');
             const fileInput = document.getElementById('topo-file-input');
 
@@ -1970,7 +1985,6 @@
             // Prevent default drag behaviors
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropZone.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
             });
 
             // Highlight drop zone when item is dragged over it
@@ -1996,6 +2010,8 @@
                     handleTopoFileUpload({ target: { files: files } });
                 }
             }, false);
+
+            dropZoneInitialized = true;
         }
 
         function preventDefaults(e) {

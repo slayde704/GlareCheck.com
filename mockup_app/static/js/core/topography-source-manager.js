@@ -124,7 +124,7 @@ export const TopographySourceManager = {
     async processGeoTIFF(file) {
         // TODO: Implement GeoTIFF parsing using geotiff.js
         // For now, show placeholder message
-        console.warn('GeoTIFF processing not yet implemented. Use XYZ format.');
+        console.warn('GeoTIFF processing not yet implemented. Use XYZ format for now.');
 
         // Placeholder - would extract from actual GeoTIFF:
         // const arrayBuffer = await file.arrayBuffer();
@@ -133,7 +133,8 @@ export const TopographySourceManager = {
         // const bbox = image.getBoundingBox();
         // const resolution = image.getResolution();
 
-        UIManager.showNotification('GeoTIFF support coming soon. Please use XYZ format.', 'warning');
+        const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
+        UIManager.showNotification(t('topo.geotiffNotSupported'), 'warning');
         return false;
     },
 
@@ -342,13 +343,7 @@ export const TopographySourceManager = {
             item.classList.add('disabled');
             item.style.opacity = '0.5';
             item.style.cursor = 'not-allowed';
-
-            // Add click handler to show notification
-            item.addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                UIManager.showNotification(t('topo.requiredMessage'), 'warning');
-            });
+            item.setAttribute('data-locked', 'true');
         });
 
         console.log('Menu items locked - awaiting topography source selection');
@@ -363,10 +358,7 @@ export const TopographySourceManager = {
             item.classList.remove('disabled');
             item.style.opacity = '1';
             item.style.cursor = 'pointer';
-
-            // Remove all existing click handlers by cloning (removes all listeners)
-            const newItem = item.cloneNode(true);
-            item.parentNode.replaceChild(newItem, item);
+            item.removeAttribute('data-locked');
         });
 
         console.log('Menu items unlocked');
