@@ -29,8 +29,24 @@ export const TopographySourceManager = {
             this.sourceType = savedSource;
             this.isConfigured = true;
             this.unlockMenuItems();
+
+            // Show/hide elevation display based on saved source
+            const elevDisplay = document.getElementById('elevationDisplay');
+            if (elevDisplay) {
+                if (savedSource === 'custom') {
+                    elevDisplay.style.display = 'block';
+                } else {
+                    elevDisplay.style.display = 'none';
+                }
+            }
         } else {
             this.lockMenuItems();
+
+            // Ensure elevation display is hidden on first load
+            const elevDisplay = document.getElementById('elevationDisplay');
+            if (elevDisplay) {
+                elevDisplay.style.display = 'none';
+            }
         }
     },
 
