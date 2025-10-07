@@ -174,13 +174,30 @@ const translations = {
         'module.manage': 'Modultypen verwalten',
         'module.name': 'Name',
         'module.add': 'Neuen Modultyp hinzufügen',
+        'module.addNew': 'Neuer Modultyp',
         'module.edit': 'Bearbeiten',
+        'module.editType': 'Modultyp bearbeiten',
         'module.delete': 'Löschen',
         'module.save': 'Speichern',
         'module.cancel': 'Abbrechen',
         'module.namePlaceholder': 'z.B. Standard-Modul',
         'module.nameRequired': 'Bitte geben Sie einen Namen ein',
         'module.nameDuplicate': 'Ein Modultyp mit diesem Namen existiert bereits',
+        'module.beamSpread': 'Bündelaufweitung',
+        'module.usage': 'Verwendungen',
+        'module.protected': 'Geschützt',
+        'module.reflectionProfile': 'Reflexionsprofil (Leuchtdichte in cd/m² bei 100.000 lx Bestrahlungsstärke)',
+        'module.incidentAngle': 'Einfallswinkel',
+        'module.luminance': 'Leuchtdichte',
+        'module.noProfile': 'Kein Reflexionsprofil definiert',
+        'module.noTypes': 'Keine Modultypen vorhanden',
+        'module.created': 'Modultyp erstellt',
+        'module.updated': 'Modultyp aktualisiert',
+        'module.deleted': 'Modultyp gelöscht',
+        'module.deleteConfirm': 'Möchten Sie den Modultyp "<strong>{name}</strong>" wirklich löschen?',
+        'module.deleteInUse': 'Der Modultyp "<strong>{name}</strong>" wird aktuell von <strong>{count} PV-Fläche{plural}</strong> verwendet.',
+        'module.area': '',
+        'module.areas': 'n',
 
         // Units
         'unit.degrees': '°',
@@ -204,6 +221,167 @@ const translations = {
         'common.success': 'Erfolgreich',
         'common.warning': 'Warnung',
         'common.info': 'Information',
+        'common.apply': 'Übernehmen',
+        'common.details': 'Details',
+
+        // Menu
+        'menu.main': 'Hauptmenü',
+        'menu.backToMain': 'Zurück zum Hauptmenü',
+        'menu.pvAreas': 'PV-Flächen',
+        'menu.observationPoints': 'Betrachtungspunkte',
+        'menu.excludedAreas': 'Ausschlussbereiche',
+        'menu.obstacles': 'Hindernisse',
+        'menu.selectFunction': 'Wählen Sie eine Funktion aus dem Menü, um zu beginnen.',
+
+        // PV List Extended
+        'pvList.existing': 'Vorhandene PV-Flächen:',
+        'pvList.exampleNameRoof': 'Süddach Haus A',
+        'pvList.exampleNameRoof2': 'Nordfläche Scheune',
+        'pvList.exampleNameFacade': 'Südfassade Gebäude 1',
+        'pvList.nameHelp': 'Optionale Bezeichnung: Geben Sie der PV-Fläche einen Namen zur besseren Identifizierung.',
+        'pvList.dimension': 'Bemaßen',
+        'pvList.duplicated': 'PV-Fläche wurde dupliziert!',
+        'pvList.lockedHelp': 'PV-Fläche ist gesperrt. Entsperren Sie die PV-Fläche über den Sperr-Button in der PV-Liste.',
+        'pvList.lockedEditHelp': 'PV-Fläche ist gesperrt. Entsperren Sie die PV-Fläche über den Sperr-Button in der PV-Liste, um die Koordinaten bearbeiten zu können.',
+        'pvList.lockedAlert': 'Diese PV-Fläche ist gesperrt und kann nicht bearbeitet werden.',
+
+        // PV Type Extended
+        'pvType.select': 'PV-Anlagentyp auswählen',
+        'pvType.roofParallelDesc': 'Module parallel zur Dachfläche montiert',
+        'pvType.roofMountedTitle': 'Dachanlage mit aufgeständerten Modulen',
+        'pvType.fieldTitle': 'Freiflächenanlage',
+
+        // Parameters Extended
+        'param.azimuth2': 'Azimut 2 (°)',
+        'param.tilt': 'Neigung (°)',
+        'param.crossTilt': 'Querneigung (°)',
+        'param.mountHeight': 'Höhe Module über Dachfläche (m)',
+        'param.moduleHeightAboveGround': 'Höhe Module über Gelände (m)',
+        'param.heightAboveReference': 'Höhe über Referenzhöhe (m)',
+        'param.referenceHeight': 'Referenzhöhe / Geländeoberkante (m über NN)',
+        'param.topEdge': 'Oberkante',
+        'param.bottomEdge': 'Unterkante',
+        'param.edgeDistance': 'Distanz Ober- zur Unterkante (m)',
+        'param.swapEdges': 'Ober-/Unterkante tauschen',
+        'param.effectiveAzimuth': 'Effektiver Azimut',
+        'param.eastWest': 'Ost-West',
+        'param.azimuthHelp': 'Der Azimut definiert die Ausrichtung der PV-Module.<br><br>360° Referenzsystem:<br>0° = Norden<br>90° = Osten<br>180° = Süden<br>270° = Westen',
+        'param.azimuth2Help': 'Zweite Ausrichtung für Ost-West System. Automatisch 180° versetzt zur ersten Ausrichtung.',
+        'param.tiltHelp': 'Die Neigung beschreibt den Winkel der PV-Module gegenüber der Horizontalen.<br><br>0° = horizontal (flach)<br>90° = vertikal (senkrecht)',
+        'param.crossTiltHelp': 'Die Querneigung beschreibt die Neigung entlang der Tischachse (orthogonal zum Azimut).',
+        'param.mountHeightHelp': 'Höhe der aufgeständerten Module über der Dachfläche.',
+        'param.facadeTiltHelp': 'Neigungswinkel zur Horizontalen. 0° = horizontal, 90° = vertikal.',
+        'param.referenceHeightHelp': 'Referenzhöhe über NN: Höhe des Geländes über dem Meeresspiegel.',
+        'param.referenceHeightRoofHelp': 'Referenzhöhe über NN: Höhe des Geländes über dem Meeresspiegel. Auto-Calculate ermittelt die Höhe über Google Elevation API.',
+        'param.heightAboveGroundHelp': 'Höhe der PV-Fläche über der Referenzhöhe (Geländeoberkante).',
+        'param.fieldMountHeightHelp': 'Höhe der aufgeständerten Module über dem Gelände.',
+        'param.moduleAzimuthHelp': 'Modul-Ausrichtung (Azimut): Die Himmelsrichtung, in die die PV-Module blicken.',
+        'param.moduleTiltHelp': 'Neigungswinkel der PV-Module: 0°=horizontal, 30-35°=typisch für Schrägdächer, 90°=vertikal.',
+        'param.roofAzimuthHelp': 'Modul-Ausrichtung (Azimut): Die Himmelsrichtung, in die die PV-Module blicken. Auto-Calculate berechnet dies aus der gezeichneten Oberkante.',
+        'param.heightCalcHelp': 'Höhenberechnung bei dachparallelen PV-Flächen: Die drei Werte Neigung, Höhe Oberkante und Höhe Unterkante sind mathematisch verknüpft.',
+        'param.topEdgeHelp': 'Oberkante der PV-Fläche (Türkis): Die höher gelegene Kante der PV-Fläche.',
+        'param.bottomEdgeHelp': 'Unterkante der PV-Fläche (Orange): Die tiefer gelegene Kante der PV-Fläche.',
+        'param.verticalDistanceHelp': 'Senkrechte Distanz: Der rechtwinklige Abstand zwischen Ober- und Unterkante.',
+        'param.swapEdgesHelp': 'PV-Flächen-Kanten vertauschen: Tauscht die Ober- und Unterkante der PV-Fläche.',
+        'param.facadeAzimuthHelp': 'Ausrichtung der reflektierenden Seite (orange markiert).',
+
+        // Corner Details Extended
+        'corner.roofHeights': 'Dachhöhen eingeben',
+        'corner.heights': 'Eckpunkt-Höhen',
+        'corner.heightsSaved': 'Eckpunkt-Höhen wurden gespeichert',
+        'corner.heightPlaceholder': 'Höhe in m',
+        'corner.fetchHeights': 'Höhen automatisch aus Google Elevation API abrufen',
+        'corner.fetchHeightsNow': 'Höhen jetzt abrufen',
+        'corner.heightAboveSeaLevel': 'Höhe über NN (Normalnull)',
+        'corner.deletePoint': 'Eckpunkt löschen',
+        'corner.description': 'Definieren Sie die Höhen der einzelnen Eckpunkte. Die Werte werden automatisch auf eine Best-Fit-Ebene projiziert.',
+        'corner.enterHeightsPrompt': '➤ Geben Sie die Höhen der Dacheckpunkte ein!',
+        'corner.heightInstructions': 'In der Spalte "Höhe über GOK" (grün markiert) tragen Sie die tatsächlichen Höhen der Dacheckpunkte über dem Gelände ein.',
+        'corner.whatIsBestFit': 'Was ist die Best-Fit-Ebene?',
+        'corner.gokLabel': 'GOK = Geländeoberkante',
+        'corner.bestFit': 'Best-Fit',
+        'corner.resultingHeight': 'Resultierende Höhe (Best-Fit)',
+        'corner.enterHeight': 'Höhe eingeben',
+
+        // Topography Extended
+        'topo.check': 'Topografie prüfen',
+        'topo.skipMessage': 'Sie können die Topografie später über "Geländehöhe verwalten" definieren',
+        'topo.confirmed': 'Topografie bestätigt',
+
+        // Grid Extended
+        'grid.recalculate': 'Raster neu berechnen',
+        'grid.updateRequired': 'Raster-Update erforderlich!',
+        'grid.geometryChanged': 'Die Flächengeometrie wurde geändert. Klicken Sie auf "Raster neu berechnen", um die Stützpunkte und Höhen zu aktualisieren.',
+        'grid.updated': 'Raster und Höhen wurden erfolgreich aktualisiert',
+        'grid.quickAnalysisHint': 'Für eine schnelle Analyse nutzen Sie das 100 m Raster',
+
+        // Import/Export Extended
+        'import.selectFile': 'Bitte wählen Sie eine Datei aus',
+        'import.noValidPoints': 'Keine gültigen Punkte in der Datei gefunden oder alle Punkte liegen außerhalb der PV-Fläche',
+        'import.noPointsInArea': 'Keine gültigen Punkte innerhalb der Fläche gefunden',
+        'export.kml': 'KML Exportieren',
+
+        // Error Messages Extended
+        'error.invalidCoordinates': 'Bitte geben Sie gültige Koordinaten ein',
+        'error.minPoints': 'Eine PV-Fläche muss mindestens 3 Eckpunkte haben.',
+        'error.noPVArea': 'Keine PV-Fläche gefunden',
+        'error.heightDataFetch': 'Fehler beim Abrufen der Höhendaten',
+
+        // Support Points Extended
+        'support.deleteAll': 'Alle Stützpunkte löschen?',
+
+        // Delete Extended
+        'delete.confirmPVWithName': 'Möchten Sie die PV-Fläche "<strong>{name}</strong>" wirklich löschen?',
+
+        // Module Extended
+        'module.deleteTitle': 'Modultyp löschen',
+
+        // Drawing Instructions
+        'draw.howToDraw': 'So zeichnen Sie die Fläche:',
+        'draw.howToDrawVertical': 'So zeichnen Sie die vertikale PV-Fläche:',
+        'draw.escToCancel': 'Mit <kbd>ESC</kbd> können Sie jederzeit abbrechen',
+        'draw.tip': 'Tipp:',
+
+        // Roof Parallel
+        'draw.roofParallel.title': 'Dachparallele PV-Fläche',
+        'draw.roofParallel.step1': 'Zeichnen Sie die erste Linie entlang der oberen oder unteren Kante der PV-Fläche',
+        'draw.roofParallel.step2': 'Versuchen Sie die PV-Fläche so gut es geht mit einem Viereck zu erfassen',
+        'draw.roofParallel.step3': 'Das Viereck kann nach Vollendung noch frei angepasst werden',
+        'draw.roofParallel.tip1': 'Im Nachgang können Eckpunkte, Kantenpositionen und Kantenlängen angepasst werden',
+        'draw.roofParallel.tip2': 'Mit der Funktion "PV-Fläche ausschließen" können Sie noch Bereiche ausschließen (z.B. Dachfenster, Schornsteine etc.), die Sie ggf. überzeichnen',
+
+        // Roof Mounted
+        'draw.roofMounted.title': 'Aufgeständerte Dachanlage',
+        'draw.roofMounted.step1': 'Klicken Sie nacheinander die Eckpunkte der Aufstellfläche',
+        'draw.roofMounted.step2': 'Schließen Sie das Polygon mit Doppelklick',
+
+        // Field
+        'draw.field.title': 'Freiflächenanlage',
+        'draw.field.step1': 'Klicken Sie nacheinander die Eckpunkte der Aufstellfläche',
+        'draw.field.step2': 'Schließen Sie das Polygon mit Doppelklick',
+        'draw.field.step3': 'Die Fläche kann nach Erstellung angepasst werden',
+        'draw.field.stepAlt1': 'Umfahren Sie die gewünschte Fläche mit Klicks',
+
+        // Facade
+        'draw.facade.title': 'Fassadenanlage / Vertikale PV',
+        'draw.facade.step1': 'Klicken Sie auf den <strong>Startpunkt</strong>',
+        'draw.facade.step2': 'Klicken Sie auf den <strong>Endpunkt</strong>',
+        'draw.facade.step3': 'Eine <span style="color: #FF8C00; font-weight: bold;">orange Linie</span> zeigt die reflektierende Seite',
+        'draw.facade.tip': 'Die Zeichenrichtung bestimmt die Ausrichtung. Von links nach rechts = Südausrichtung.',
+
+        // Search
+        'search.title': 'Adresssuche',
+        'search.placeholder': 'Adresse oder Koordinaten eingeben...',
+        'search.button': 'Suchen',
+        'search.tip': 'Tipp:',
+        'search.tipCoordinates': 'Auch Koordinaten möglich',
+        'search.formatExample': 'Format: 48.1351, 11.5820 oder 48.1351 11.5820',
+        'search.exampleAddress': 'z.B. Marienplatz, München',
+        'search.searching': 'Suche läuft...',
+        'search.noResults': 'Keine Ergebnisse gefunden',
+        'search.error': 'Fehler bei der Suche',
+        'search.invalidCoordinates': 'Ungültige Koordinaten. Bitte verwenden Sie das Format: Breitengrad, Längengrad',
+        'search.locationFound': 'Standort gefunden',
     },
 
     en: {
@@ -376,13 +554,30 @@ const translations = {
         'module.manage': 'Manage Module Types',
         'module.name': 'Name',
         'module.add': 'Add New Module Type',
+        'module.addNew': 'New Module Type',
         'module.edit': 'Edit',
+        'module.editType': 'Edit Module Type',
         'module.delete': 'Delete',
         'module.save': 'Save',
         'module.cancel': 'Cancel',
         'module.namePlaceholder': 'e.g. Standard Module',
         'module.nameRequired': 'Please enter a name',
         'module.nameDuplicate': 'A module type with this name already exists',
+        'module.beamSpread': 'Beam Spread',
+        'module.usage': 'Usage',
+        'module.protected': 'Protected',
+        'module.reflectionProfile': 'Reflection Profile (Luminance in cd/m² at 100,000 lx irradiance)',
+        'module.incidentAngle': 'Incident Angle',
+        'module.luminance': 'Luminance',
+        'module.noProfile': 'No reflection profile defined',
+        'module.noTypes': 'No module types available',
+        'module.created': 'Module type created',
+        'module.updated': 'Module type updated',
+        'module.deleted': 'Module type deleted',
+        'module.deleteConfirm': 'Do you really want to delete the module type "<strong>{name}</strong>"?',
+        'module.deleteInUse': 'The module type "<strong>{name}</strong>" is currently used by <strong>{count} PV area{plural}</strong>.',
+        'module.area': '',
+        'module.areas': 's',
 
         // Units
         'unit.degrees': '°',
@@ -406,6 +601,167 @@ const translations = {
         'common.success': 'Success',
         'common.warning': 'Warning',
         'common.info': 'Information',
+        'common.apply': 'Apply',
+        'common.details': 'Details',
+
+        // Menu
+        'menu.main': 'Main Menu',
+        'menu.backToMain': 'Back to Main Menu',
+        'menu.pvAreas': 'PV Areas',
+        'menu.observationPoints': 'Observation Points',
+        'menu.excludedAreas': 'Excluded Areas',
+        'menu.obstacles': 'Obstacles',
+        'menu.selectFunction': 'Select a function from the menu to begin.',
+
+        // PV List Extended
+        'pvList.existing': 'Existing PV Areas:',
+        'pvList.exampleNameRoof': 'South Roof House A',
+        'pvList.exampleNameRoof2': 'North Surface Barn',
+        'pvList.exampleNameFacade': 'South Facade Building 1',
+        'pvList.nameHelp': 'Optional name: Give the PV area a name for better identification.',
+        'pvList.dimension': 'Dimension',
+        'pvList.duplicated': 'PV area has been duplicated!',
+        'pvList.lockedHelp': 'PV area is locked. Unlock the PV area via the lock button in the PV list.',
+        'pvList.lockedEditHelp': 'PV area is locked. Unlock the PV area via the lock button in the PV list to edit coordinates.',
+        'pvList.lockedAlert': 'This PV area is locked and cannot be edited.',
+
+        // PV Type Extended
+        'pvType.select': 'Select PV System Type',
+        'pvType.roofParallelDesc': 'Modules mounted parallel to roof surface',
+        'pvType.roofMountedTitle': 'Roof System with Tilted Modules',
+        'pvType.fieldTitle': 'Ground-Mounted System',
+
+        // Parameters Extended
+        'param.azimuth2': 'Azimuth 2 (°)',
+        'param.tilt': 'Tilt (°)',
+        'param.crossTilt': 'Cross Tilt (°)',
+        'param.mountHeight': 'Module Height Above Roof (m)',
+        'param.moduleHeightAboveGround': 'Module Height Above Ground (m)',
+        'param.heightAboveReference': 'Height Above Reference (m)',
+        'param.referenceHeight': 'Reference Height / Ground Level (m MSL)',
+        'param.topEdge': 'Top Edge',
+        'param.bottomEdge': 'Bottom Edge',
+        'param.edgeDistance': 'Distance Top to Bottom Edge (m)',
+        'param.swapEdges': 'Swap Top/Bottom Edges',
+        'param.effectiveAzimuth': 'Effective Azimuth',
+        'param.eastWest': 'East-West',
+        'param.azimuthHelp': 'Azimuth defines the orientation of PV modules.<br><br>360° reference:<br>0° = North<br>90° = East<br>180° = South<br>270° = West',
+        'param.azimuth2Help': 'Second orientation for East-West system. Automatically offset 180° from first orientation.',
+        'param.tiltHelp': 'Tilt describes the angle of PV modules relative to horizontal.<br><br>0° = horizontal (flat)<br>90° = vertical (upright)',
+        'param.crossTiltHelp': 'Cross tilt describes the tilt along the table axis (orthogonal to azimuth).',
+        'param.mountHeightHelp': 'Height of tilted modules above roof surface.',
+        'param.facadeTiltHelp': 'Tilt angle to horizontal. 0° = horizontal, 90° = vertical.',
+        'param.referenceHeightHelp': 'Reference height MSL: Terrain elevation above sea level.',
+        'param.referenceHeightRoofHelp': 'Reference height MSL: Terrain elevation above sea level. Auto-Calculate retrieves height via Google Elevation API.',
+        'param.heightAboveGroundHelp': 'Height of PV area above reference height (ground level).',
+        'param.fieldMountHeightHelp': 'Height of tilted modules above ground.',
+        'param.moduleAzimuthHelp': 'Module orientation (Azimuth): The compass direction the PV modules face.',
+        'param.moduleTiltHelp': 'Module tilt angle: 0°=horizontal, 30-35°=typical for pitched roofs, 90°=vertical.',
+        'param.roofAzimuthHelp': 'Module orientation (Azimuth): The compass direction the PV modules face. Auto-Calculate determines this from the drawn top edge.',
+        'param.heightCalcHelp': 'Height calculation for roof-parallel PV areas: The three values tilt, top edge height, and bottom edge height are mathematically linked.',
+        'param.topEdgeHelp': 'Top edge of PV area (Turquoise): The higher edge of the PV area.',
+        'param.bottomEdgeHelp': 'Bottom edge of PV area (Orange): The lower edge of the PV area.',
+        'param.verticalDistanceHelp': 'Vertical distance: The perpendicular distance between top and bottom edge.',
+        'param.swapEdgesHelp': 'Swap PV area edges: Swaps the top and bottom edges of the PV area.',
+        'param.facadeAzimuthHelp': 'Orientation of the reflecting side (marked in orange).',
+
+        // Corner Details Extended
+        'corner.roofHeights': 'Enter Roof Heights',
+        'corner.heights': 'Corner Point Heights',
+        'corner.heightsSaved': 'Corner point heights have been saved',
+        'corner.heightPlaceholder': 'Height in m',
+        'corner.fetchHeights': 'Automatically retrieve heights from Google Elevation API',
+        'corner.fetchHeightsNow': 'Retrieve heights now',
+        'corner.heightAboveSeaLevel': 'Height above MSL (Mean Sea Level)',
+        'corner.deletePoint': 'Delete corner point',
+        'corner.description': 'Define the heights of individual corner points. Values are automatically projected onto a best-fit plane.',
+        'corner.enterHeightsPrompt': '➤ Enter the roof corner point heights!',
+        'corner.heightInstructions': 'In the "Height above GL" column (marked in green), enter the actual heights of the roof corner points above ground.',
+        'corner.whatIsBestFit': 'What is the Best-Fit Plane?',
+        'corner.gokLabel': 'GL = Ground Level',
+        'corner.bestFit': 'Best-Fit',
+        'corner.resultingHeight': 'Resulting Height (Best-Fit)',
+        'corner.enterHeight': 'Enter height',
+
+        // Topography Extended
+        'topo.check': 'Check Topography',
+        'topo.skipMessage': 'You can define topography later via "Manage Terrain Height"',
+        'topo.confirmed': 'Topography confirmed',
+
+        // Grid Extended
+        'grid.recalculate': 'Recalculate Grid',
+        'grid.updateRequired': 'Grid Update Required!',
+        'grid.geometryChanged': 'Area geometry has changed. Click "Recalculate Grid" to update support points and heights.',
+        'grid.updated': 'Grid and heights have been successfully updated',
+        'grid.quickAnalysisHint': 'For quick analysis, use the 100 m grid',
+
+        // Import/Export Extended
+        'import.selectFile': 'Please select a file',
+        'import.noValidPoints': 'No valid points found in file or all points are outside the PV area',
+        'import.noPointsInArea': 'No valid points found within the area',
+        'export.kml': 'Export KML',
+
+        // Error Messages Extended
+        'error.invalidCoordinates': 'Please enter valid coordinates',
+        'error.minPoints': 'A PV area must have at least 3 corner points.',
+        'error.noPVArea': 'No PV area found',
+        'error.heightDataFetch': 'Error retrieving height data',
+
+        // Support Points Extended
+        'support.deleteAll': 'Delete all support points?',
+
+        // Delete Extended
+        'delete.confirmPVWithName': 'Do you really want to delete the PV area "<strong>{name}</strong>"?',
+
+        // Module Extended
+        'module.deleteTitle': 'Delete Module Type',
+
+        // Drawing Instructions
+        'draw.howToDraw': 'How to draw the area:',
+        'draw.howToDrawVertical': 'How to draw the vertical PV area:',
+        'draw.escToCancel': 'Press <kbd>ESC</kbd> to cancel at any time',
+        'draw.tip': 'Tip:',
+
+        // Roof Parallel
+        'draw.roofParallel.title': 'Roof-Parallel PV Area',
+        'draw.roofParallel.step1': 'Draw the first line along the top or bottom edge of the PV area',
+        'draw.roofParallel.step2': 'Try to capture the PV area as well as possible with a quadrilateral',
+        'draw.roofParallel.step3': 'The quadrilateral can be freely adjusted after completion',
+        'draw.roofParallel.tip1': 'Corner points, edge positions and edge lengths can be adjusted afterwards',
+        'draw.roofParallel.tip2': 'Use the "Exclude PV Area" function to exclude areas (e.g. roof windows, chimneys, etc.) that you may have drawn over',
+
+        // Roof Mounted
+        'draw.roofMounted.title': 'Roof-Mounted System',
+        'draw.roofMounted.step1': 'Click the corner points of the installation area in sequence',
+        'draw.roofMounted.step2': 'Close the polygon with a double-click',
+
+        // Field
+        'draw.field.title': 'Ground-Mounted System',
+        'draw.field.step1': 'Click the corner points of the installation area in sequence',
+        'draw.field.step2': 'Close the polygon with a double-click',
+        'draw.field.step3': 'The area can be adjusted after creation',
+        'draw.field.stepAlt1': 'Click around the desired area',
+
+        // Facade
+        'draw.facade.title': 'Facade System / Vertical PV',
+        'draw.facade.step1': 'Click on the <strong>start point</strong>',
+        'draw.facade.step2': 'Click on the <strong>end point</strong>',
+        'draw.facade.step3': 'An <span style="color: #FF8C00; font-weight: bold;">orange line</span> shows the reflecting side',
+        'draw.facade.tip': 'The drawing direction determines the orientation. Left to right = South orientation.',
+
+        // Search
+        'search.title': 'Address Search',
+        'search.placeholder': 'Enter address or coordinates...',
+        'search.button': 'Search',
+        'search.tip': 'Tip:',
+        'search.tipCoordinates': 'Coordinates also supported',
+        'search.formatExample': 'Format: 48.1351, 11.5820 or 48.1351 11.5820',
+        'search.exampleAddress': 'e.g. Marienplatz, Munich',
+        'search.searching': 'Searching...',
+        'search.noResults': 'No results found',
+        'search.error': 'Search error',
+        'search.invalidCoordinates': 'Invalid coordinates. Please use format: Latitude, Longitude',
+        'search.locationFound': 'Location found',
     }
 };
 

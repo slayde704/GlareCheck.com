@@ -9,6 +9,9 @@ import { MapManager } from '../core/map-manager.js';
 import { Dimensions } from '../pv-areas/dimensions.js';
 import { KMLExporter } from '../utils/kml-exporter.js';
 
+
+// i18n helper
+const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
 export const PVListRenderer = {
     // Container element ID
     containerId: 'pv-list',
@@ -59,7 +62,7 @@ export const PVListRenderer = {
         const pvAreas = StateManager.getAllPVAreas();
         
         if (pvAreas.length === 0) {
-            container.innerHTML = '<p class="text-muted small">Keine PV-Flächen vorhanden</p>';
+            container.innerHTML = `<p class="text-muted small">${t('pvList.empty')}</p>`;
             return;
         }
         
@@ -75,12 +78,12 @@ export const PVListRenderer = {
     renderPVItem(pv, index) {
         const pvNumber = index + 1;
         const typeLabels = {
-            'roof-parallel': 'Dachparallel',
-            'roof-mounted': 'Aufgeständert (Dach)',
-            'tilted': 'Aufgeständert',
-            'facade': 'Fassade / Vertikale PV',
-            'field': 'Freiflächenanlage',
-            'ground': 'Freifläche'
+            'roof-parallel': t('pvType.roofParallel'),
+            'roof-mounted': t('pvType.roofMounted'),
+            'tilted': t('pvType.roofMounted'),
+            'facade': t('pvType.facade'),
+            'field': t('pvType.field'),
+            'ground': t('pvType.field')
         };
         
         const displayType = typeLabels[pv.type] || pv.type;
@@ -112,7 +115,7 @@ export const PVListRenderer = {
                        onclick="event.stopPropagation()"></i>
                     <i class="fas fa-chevron-${isExpanded ? 'down' : 'right'}" id="chevron-${pv.id}" class="me-2" style="width: 20px;"></i>
                     <span class="flex-grow-1">PV${pvNumber}${pv.name ? `: ${pv.name}` : ''}</span>
-                    <button class="btn btn-link btn-sm p-0 text-danger" onclick="event.stopPropagation(); PVListRenderer.deletePVArea('${pv.id}')" title="Löschen">
+                    <button class="btn btn-link btn-sm p-0 text-danger" onclick="event.stopPropagation(); PVListRenderer.deletePVArea('${pv.id}')" title="${t('common.delete')}">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
@@ -141,12 +144,12 @@ export const PVListRenderer = {
                     <i class="fas fa-${pv.locked ? 'lock' : 'unlock'}"></i>
                 </button>
                 <button class="btn btn-sm ${pv.showDimensions ? 'btn-primary' : 'btn-outline-secondary'} flex-fill" style="padding: 0.2rem;"
-                        onclick="PVListRenderer.toggleDimensions('${pv.id}')" title="Bemaßen">
+                        onclick="PVListRenderer.toggleDimensions('${pv.id}')" title="${t('pvList.dimension')}">
                     <i class="fas fa-ruler-combined"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-secondary flex-fill" style="padding: 0.2rem;"
                         onclick="PVListRenderer.openCornerDetails('${pv.id}')" 
-                        title="${pv.type === 'roof-mounted' ? 'Dachhöhen eingeben' : 'Eckpunkte Details'}">
+                        title="${pv.type === 'roof-mounted' ? t('corner.roofHeights') : t('corner.title')}">
                     <i class="bi bi-geo-alt"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-secondary flex-fill" style="padding: 0.2rem;"
@@ -167,24 +170,24 @@ export const PVListRenderer = {
                     Bezeichnung
                     <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;"
                        data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="Optionale Bezeichnung: Geben Sie der PV-Fläche einen Namen zur besseren Identifizierung. Z.B.: 'Süddach Haus A' oder 'Nordfläche Scheune'"></i>
+                       title="${t('pvList.nameHelp')}"></i>
                 </label>
-                <input type="text" class="form-control form-control-sm" 
-                       value="${pv.name || ''}" 
-                       placeholder="${pv.type === 'facade' ? 'z.B. Südfassade Gebäude 1' : 'z.B. Süddach Haus A'}"
+                <input type="text" class="form-control form-control-sm"
+                       value="${pv.name || ''}"
+                       placeholder="${pv.type === 'facade' ? t('pvList.exampleNameFacade') : t('pvList.exampleNameRoof')}"
                        onchange="PVListRenderer.updatePVName('${pv.id}', this.value)">
             </div>
             
             ${pv.type === 'roof-mounted' ? `
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    ${pv.eastWest ? 'Azimut 1' : 'Azimut'} (°)
+                    ${pv.eastWest ? 'Azimut 1' : t('param.azimuth')} (°)
                     <i class="bi bi-info-circle text-primary ms-1" 
                        style="cursor: help; font-size: 0.75rem;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
                        data-bs-html="true"
-                       title="Der Azimut definiert die Ausrichtung der PV-Module.<br><br>360° Referenzsystem:<br>0° = Norden<br>90° = Osten<br>180° = Süden<br>270° = Westen">
+                       title="${t("param.azimuthHelp")}">
                     </i>
                 </label>
                 <div style="display: flex; align-items: center;">
@@ -201,7 +204,7 @@ export const PVListRenderer = {
                                style="margin-right: 3px; vertical-align: middle;"
                                onchange="PVListRenderer.toggleEastWest('${pv.id}', this.checked)">
                         <label for="east-west-${pv.id}" style="font-size: 0.875rem; vertical-align: middle; cursor: pointer;">
-                            Ost-West
+                            ${t('param.eastWest')}
                         </label>
                     </span>
                 </div>
@@ -209,13 +212,13 @@ export const PVListRenderer = {
             ${pv.eastWest ? `
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Azimut 2 (°)
+                    ${t('param.azimuth2')}
                     <i class="bi bi-info-circle text-primary ms-1" 
                        style="cursor: help; font-size: 0.75rem;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
                        data-bs-html="true"
-                       title="Zweite Ausrichtung für Ost-West System. Automatisch 180° versetzt zur ersten Ausrichtung.">
+                       title="${t('param.azimuth2Help')}">
                     </i>
                 </label>
                 <input type="number" class="form-control form-control-sm" 
@@ -227,13 +230,13 @@ export const PVListRenderer = {
             ` : ''}
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Neigung (°)
+                    ${t('param.tilt')}
                     <i class="bi bi-info-circle text-primary ms-1" 
                        style="cursor: help; font-size: 0.75rem;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
                        data-bs-html="true"
-                       title="Die Neigung beschreibt den Winkel der PV-Module gegenüber der Horizontalen.<br><br>0° = horizontal (flach)<br>90° = vertikal (senkrecht)">
+                       title="${t('param.tiltHelp')}">
                     </i>
                 </label>
                 <input type="number" class="form-control form-control-sm" 
@@ -244,13 +247,13 @@ export const PVListRenderer = {
             </div>
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Querneigung (°) <small id="cross-tilt-direction-${pv.id}" class="text-muted" style="font-size: 0.65rem;">${this.getCrossTiltDirection(pv.azimuth || 180)}</small>
+                    ${t('param.crossTilt')} <small id="cross-tilt-direction-${pv.id}" class="text-muted" style="font-size: 0.65rem;">${this.getCrossTiltDirection(pv.azimuth || 180)}</small>
                     <i class="bi bi-info-circle text-primary ms-1" 
                        style="cursor: help; font-size: 0.75rem;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
                        data-bs-html="true"
-                       title="Die Querneigung beschreibt die Neigung entlang der Tischachse (orthogonal zum Azimut).<br><br>Dies beeinflusst die effektive Ausrichtung der PV-Module.<br><br><strong>Hinweis:</strong> Wenn eine Fläche unterschiedliche Querneigungen aufweist, sollte diese durch entsprechende Einzelflächen dargestellt werden.">
+                       title="${t('param.crossTiltHelp')}">
                     </i>
                 </label>
                 <input type="number" class="form-control form-control-sm" 
@@ -260,7 +263,7 @@ export const PVListRenderer = {
                        onchange="PVListRenderer.updatePVParameter('${pv.id}', 'crossTilt', this.value)">
                 ${Math.abs(pv.crossTilt || 0) > 0.01 ? `
                 <div class="text-muted small mt-1">
-                    <strong>Effektiver Azimut:</strong> ${this.calculateEffectiveAzimuth(pv.azimuth || 180, pv.tilt || 30, pv.crossTilt || 0)}°
+                    <strong>${t('param.effectiveAzimuth')}:</strong> ${this.calculateEffectiveAzimuth(pv.azimuth || 180, pv.tilt || 30, pv.crossTilt || 0)}°
                 </div>
                 ` : ''}
             </div>
@@ -268,15 +271,15 @@ export const PVListRenderer = {
                 <div class="mb-2">
                     <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600;">
                         <i class="bi bi-arrows-expand text-success me-1"></i>
-                        Höhe Module über Dachfläche (m)
+                        ${t('param.mountHeight')}
                         <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;"
                            data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Höhe der aufgeständerten Module über der Dachfläche. Bei aufgeständerten Systemen befinden sich die Module in einem bestimmten Abstand über dem Dach."></i>
+                           title="${t('param.mountHeightHelp')}"></i>
                     </label>
                 </div>
                 <div class="row g-2">
                     <div class="col-6">
-                        <label class="form-label mb-1" style="font-size: 0.7rem;">Unterkante</label>
+                        <label class="form-label mb-1" style="font-size: 0.7rem;">${t('param.bottomEdge')}</label>
                         <div class="input-group input-group-sm">
                             <input type="number" class="form-control" 
                                    value="${pv.moduleHeightBottom || 0.2}" 
@@ -287,7 +290,7 @@ export const PVListRenderer = {
                         </div>
                     </div>
                     <div class="col-6">
-                        <label class="form-label mb-1" style="font-size: 0.7rem;">Oberkante</label>
+                        <label class="form-label mb-1" style="font-size: 0.7rem;">${t('param.topEdge')}</label>
                         <div class="input-group input-group-sm">
                             <input type="number" class="form-control" 
                                    value="${pv.moduleHeightTop || 1.2}" 
@@ -304,16 +307,16 @@ export const PVListRenderer = {
                         onclick="PVListRenderer.openCornerHeightsDialog('${pv.id}')"
                         style="font-size: 0.875rem;">
                     <i class="fas fa-sort-amount-up me-2"></i>
-                    Dachhöhen eingeben
+                    ${t('corner.roofHeights')}
                 </button>
             </div>
             ` : pv.type === 'facade' ? `
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Azimut (°)
+                    ${t('param.azimuth')}
                     <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;"
                        data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="Ausrichtung der reflektierenden Seite (orange markiert). Auto-Calculate berechnet den Azimut basierend auf der Linienrichtung."></i>
+                       title="${t('param.facadeAzimuthHelp')}"></i>
                 </label>
                 <div class="d-flex align-items-center gap-1">
                     <input type="number" class="form-control form-control-sm" 
@@ -328,7 +331,7 @@ export const PVListRenderer = {
                            ${pv.autoCalculateAzimuth !== false ? 'checked' : ''}
                            onchange="PVListRenderer.toggleAutoCalculateAzimuth('${pv.id}', this.checked)">
                     <label class="form-check-label small" for="auto-calc-azimuth-${pv.id}" style="white-space: nowrap;">
-                        Auto-Calculate
+                        ${t('param.autoCalculate')}
                     </label>
                 </div>
             </div>
@@ -338,10 +341,10 @@ export const PVListRenderer = {
             </div>
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Neigung (°)
+                    ${t('param.tilt')}
                     <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;"
                        data-bs-toggle="tooltip" data-bs-placement="top"
-                       title="Neigungswinkel zur Horizontalen. 0° = horizontal (flach liegend), 90° = vertikal (senkrecht stehend). Bei Fassaden bedeuten Werte unter 90°, dass die Fläche nach außen geneigt ist."></i>
+                       title="${t('param.facadeTiltHelp')}"></i>
                 </label>
                 <input type="number" class="form-control form-control-sm" 
                        value="${pv.tilt !== undefined ? pv.tilt : 90}" 
@@ -351,11 +354,11 @@ export const PVListRenderer = {
             </div>
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Referenzhöhe / Geländeoberkante (m)
+                    ${t('param.referenceHeight')}
                     <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
-                       title="Referenzhöhe über NN: Höhe des Geländes über dem Meeresspiegel. Auto-Calculate ermittelt die Höhe über Google Elevation API.">
+                       title="${t('param.referenceHeightHelp')}">
                     </i>
                 </label>
                 <div class="d-flex align-items-center gap-1">
@@ -371,7 +374,7 @@ export const PVListRenderer = {
                            ${pv.autoCalculateReferenceHeight !== false ? 'checked' : ''}
                            onchange="PVListRenderer.toggleAutoCalculateReference('${pv.id}', this.checked)">
                     <label class="form-check-label small" for="auto-calc-ref-${pv.id}" style="white-space: nowrap;">
-                        Auto-Calculate
+                        ${t('param.autoCalculate')}
                     </label>
                 </div>
             </div>
@@ -379,16 +382,16 @@ export const PVListRenderer = {
                 <div class="mb-2">
                     <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600;">
                         <i class="bi bi-arrows-expand text-warning me-1"></i>
-                        Höhe über Referenzhöhe (m)
+                        ${t('param.heightAboveReference')}
                         <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;"
                            data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Höhe der PV-Fläche über der Referenzhöhe (Geländeoberkante). Die tatsächliche Höhe über NN ergibt sich aus Referenzhöhe + diesen Werten."></i>
+                           title="${t('param.heightAboveGroundHelp')}"></i>
                     </label>
                 </div>
                 <div class="row g-2">
                     <div class="col-6">
                         <label class="form-label mb-1" style="font-size: 0.7rem;">
-                            <i class="bi bi-arrow-down-short"></i> Unterkante
+                            <i class="bi bi-arrow-down-short"></i> ${t('param.bottomEdge')}
                         </label>
                         <div class="input-group input-group-sm">
                             <input type="number" class="form-control" 
@@ -400,7 +403,7 @@ export const PVListRenderer = {
                     </div>
                     <div class="col-6">
                         <label class="form-label mb-1" style="font-size: 0.7rem;">
-                            <i class="bi bi-arrow-up-short"></i> Oberkante
+                            <i class="bi bi-arrow-up-short"></i> ${t('param.topEdge')}
                         </label>
                         <div class="input-group input-group-sm">
                             <input type="number" class="form-control" 
@@ -415,13 +418,13 @@ export const PVListRenderer = {
             ` : pv.type === 'field' ? `
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    ${pv.eastWest ? 'Azimut 1' : 'Azimut'} (°)
+                    ${pv.eastWest ? 'Azimut 1' : t('param.azimuth')} (°)
                     <i class="bi bi-info-circle text-primary ms-1" 
                        style="cursor: help; font-size: 0.75rem;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
                        data-bs-html="true"
-                       title="Der Azimut definiert die Ausrichtung der PV-Module.<br><br>360° Referenzsystem:<br>0° = Norden<br>90° = Osten<br>180° = Süden<br>270° = Westen">
+                       title="${t("param.azimuthHelp")}">
                     </i>
                 </label>
                 <div style="display: flex; align-items: center;">
@@ -438,7 +441,7 @@ export const PVListRenderer = {
                                style="margin-right: 3px; vertical-align: middle;"
                                onchange="PVListRenderer.toggleEastWest('${pv.id}', this.checked)">
                         <label for="east-west-${pv.id}" style="font-size: 0.875rem; vertical-align: middle; cursor: pointer;">
-                            Ost-West
+                            ${t('param.eastWest')}
                         </label>
                     </span>
                 </div>
@@ -446,7 +449,7 @@ export const PVListRenderer = {
             ${pv.eastWest ? `
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Azimut 2 (°)
+                    ${t('param.azimuth2')}
                 </label>
                 <input type="number" class="form-control form-control-sm" 
                        value="${((pv.azimuth || 180) + 180) % 360}" 
@@ -457,13 +460,13 @@ export const PVListRenderer = {
             ` : ''}
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Neigung (°)
+                    ${t('param.tilt')}
                     <i class="bi bi-info-circle text-primary ms-1" 
                        style="cursor: help; font-size: 0.75rem;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
                        data-bs-html="true"
-                       title="Die Neigung beschreibt den Winkel der PV-Module gegenüber der Horizontalen.<br><br>0° = horizontal (flach)<br>90° = vertikal (senkrecht)">
+                       title="${t('param.tiltHelp')}">
                     </i>
                 </label>
                 <input type="number" class="form-control form-control-sm" 
@@ -474,11 +477,11 @@ export const PVListRenderer = {
             </div>
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Referenzhöhe / Geländeoberkante (m)
+                    ${t('param.referenceHeight')}
                     <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
-                       title="Referenzhöhe über NN: Höhe des Geländes über dem Meeresspiegel. Auto-Calculate ermittelt die Höhe über Google Elevation API.">
+                       title="${t('param.referenceHeightHelp')}">
                     </i>
                 </label>
                 <div class="d-flex align-items-center gap-1">
@@ -494,7 +497,7 @@ export const PVListRenderer = {
                            ${pv.autoCalculateReferenceHeight !== false ? 'checked' : ''}
                            onchange="PVListRenderer.toggleAutoCalculateReference('${pv.id}', this.checked)">
                     <label class="form-check-label small" for="auto-calc-ref-${pv.id}" style="white-space: nowrap;">
-                        Auto-Calculate
+                        ${t('param.autoCalculate')}
                     </label>
                 </div>
             </div>
@@ -502,15 +505,15 @@ export const PVListRenderer = {
                 <div class="mb-2">
                     <label class="form-label mb-1" style="font-size: 0.75rem; font-weight: 600;">
                         <i class="bi bi-arrows-expand text-success me-1"></i>
-                        Höhe Module über Gelände (m)
+                        ${t('param.moduleHeightAboveGround')}
                         <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;"
                            data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Höhe der aufgeständerten Module über dem Gelände. Bei Freiflächenanlagen befinden sich die Module in einem bestimmten Abstand über dem Boden."></i>
+                           title="${t('param.fieldMountHeightHelp')}"></i>
                     </label>
                 </div>
                 <div class="row g-2">
                     <div class="col-6">
-                        <label class="form-label mb-1" style="font-size: 0.7rem;">Unterkante</label>
+                        <label class="form-label mb-1" style="font-size: 0.7rem;">${t('param.bottomEdge')}</label>
                         <div class="input-group input-group-sm">
                             <input type="number" class="form-control" 
                                    value="${pv.moduleHeightBottom || 0.8}" 
@@ -520,7 +523,7 @@ export const PVListRenderer = {
                         </div>
                     </div>
                     <div class="col-6">
-                        <label class="form-label mb-1" style="font-size: 0.7rem;">Oberkante</label>
+                        <label class="form-label mb-1" style="font-size: 0.7rem;">${t('param.topEdge')}</label>
                         <div class="input-group input-group-sm">
                             <input type="number" class="form-control" 
                                    value="${pv.moduleHeightTop || 2.5}" 
@@ -543,10 +546,10 @@ export const PVListRenderer = {
             <div class="row g-1 mb-2">
                 <div class="col-6">
                     <label class="form-label mb-1" style="font-size: 0.75rem;">
-                        Azimut (°)
+                        ${t('param.azimuth')}
                         <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;"
                            data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Modul-Ausrichtung (Azimut): Die Himmelsrichtung, in die die PV-Module blicken. 0°/360°=Nord, 90°=Ost, 180°=Süd, 270°=West"></i>
+                           title="${t('param.moduleAzimuthHelp')}"></i>
                     </label>
                     <input type="number" class="form-control form-control-sm" 
                            value="${pv.azimuth || 180}" 
@@ -555,10 +558,10 @@ export const PVListRenderer = {
                 </div>
                 <div class="col-6">
                     <label class="form-label mb-1" style="font-size: 0.75rem;">
-                        Neigung (°)
+                        ${t('param.tilt')}
                         <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;"
                            data-bs-toggle="tooltip" data-bs-placement="top"
-                           title="Neigungswinkel der PV-Module: 0°=horizontal, 30-35°=typisch für Schrägdächer, 90°=vertikal (Fassade)"></i>
+                           title="${t('param.moduleTiltHelp')}"></i>
                     </label>
                     <input type="number" class="form-control form-control-sm" 
                            value="${pv.tilt || 0}" 
@@ -569,11 +572,11 @@ export const PVListRenderer = {
             ` : `
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Azimut (°)
+                    ${t('param.azimuth')}
                     <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
-                       title="Modul-Ausrichtung (Azimut): Die Himmelsrichtung, in die die PV-Module blicken. Bei dachparallelen Flächen ist dies senkrecht zur Firstrichtung. 0°=Nord, 90°=Ost, 180°=Süd, 270°=West. Auto-Calculate berechnet dies aus der gezeichneten Oberkante.">
+                       title="${t('param.roofAzimuthHelp')}">
                     </i>
                 </label>
                 <div class="d-flex align-items-center gap-1">
@@ -587,14 +590,14 @@ export const PVListRenderer = {
                            ${pv.autoCalculateAzimuth !== false ? 'checked' : ''}
                            onchange="PVListRenderer.toggleAutoCalculate('${pv.id}', 'azimuth', this.checked)">
                     <label class="form-check-label small" for="auto-calc-azimuth-${pv.id}" style="white-space: nowrap;">
-                        Auto-calculate
+                        ${t('param.autoCalculate')}
                     </label>
                 </div>
             </div>
             `}
             
             <div class="mb-2">
-                <label class="form-label mb-1" style="font-size: 0.75rem;">Modultyp</label>
+                <label class="form-label mb-1" style="font-size: 0.75rem;">${t('pvList.moduleType')}</label>
                 <div class="input-group input-group-sm">
                     <select class="form-select form-select-sm" 
                             onchange="PVListRenderer.updatePVParameter('${pv.id}', 'moduleType', this.value)">
@@ -606,7 +609,7 @@ export const PVListRenderer = {
                     </select>
                     <button class="btn btn-sm btn-outline-secondary" type="button" 
                             onclick="ModuleTypeManager.open()"
-                            title="Modultypen verwalten">
+                            title="${t('pvList.moduleType')}en verwalten">
                         <i class="bi bi-gear"></i>
                     </button>
                 </div>
@@ -616,11 +619,11 @@ export const PVListRenderer = {
             <div class="mb-2">
                 <div class="mb-2">
                     <label class="form-label mb-1" style="font-size: 0.75rem;">
-                        Neigung (°)
+                        ${t('param.tilt')}
                         <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;" 
                            data-bs-toggle="tooltip" 
                            data-bs-placement="top"
-                           title="Höhenberechnung bei dachparallelen PV-Flächen: Die drei Werte Neigung, Höhe Oberkante und Höhe Unterkante sind mathematisch verknüpft. Mit Auto-Calculate können Sie einen Wert automatisch berechnen lassen."></i>
+                           title="${t('param.heightCalcHelp')}"></i>
                     </label>
                     <div class="d-flex align-items-center gap-1">
                         <input type="number" class="form-control form-control-sm" 
@@ -635,19 +638,19 @@ export const PVListRenderer = {
                                ${pv.autoCalculateField === 'tilt' ? 'checked' : ''}
                                onchange="PVListRenderer.setAutoCalculateField('${pv.id}', 'tilt', this.checked)">
                         <label class="form-check-label small" for="auto-calc-tilt-${pv.id}" style="white-space: nowrap;">
-                            Auto-calculate
+                            ${t('param.autoCalculate')}
                         </label>
                     </div>
                 </div>
                 
                 <div class="mb-2">
                     <label class="form-label mb-1" style="font-size: 0.75rem;">
-                        Höhe Oberkante (m) <span style="color: #00CED1; font-weight: bold; font-size: 1.2em;">━━</span>
+                        ${t('param.heightTop')} <span style="color: #00CED1; font-weight: bold; font-size: 1.2em;">━━</span>
                         <i class="bi bi-info-circle text-primary ms-1" 
                            style="font-size: 0.75rem; cursor: help;" 
                            data-bs-toggle="tooltip" 
                            data-bs-placement="top"
-                               title="Oberkante der PV-Fläche (Türkis): Die höher gelegene Kante der PV-Fläche, typischerweise die Firstseite des Daches. Die türkise Linie auf der Karte markiert diese PV-Flächen-Kante.">
+                               title="${t('param.topEdgeHelp')}">
                         </i>
                     </label>
                     <div class="d-flex align-items-center gap-1">
@@ -663,19 +666,19 @@ export const PVListRenderer = {
                                ${pv.autoCalculateField === 'heightTop' ? 'checked' : ''}
                                onchange="PVListRenderer.setAutoCalculateField('${pv.id}', 'heightTop', this.checked)">
                         <label class="form-check-label small" for="auto-calc-height-top-${pv.id}" style="white-space: nowrap;">
-                            Auto-calculate
+                            ${t('param.autoCalculate')}
                         </label>
                     </div>
                 </div>
                 
                 <div class="mb-2">
                     <label class="form-label mb-1" style="font-size: 0.75rem;">
-                        Höhe Unterkante (m) <span style="color: #FF8C00; font-weight: bold; font-size: 1.2em;">━━</span>
+                        ${t('param.heightBottom')} <span style="color: #FF8C00; font-weight: bold; font-size: 1.2em;">━━</span>
                         <i class="bi bi-info-circle text-primary ms-1" 
                            style="font-size: 0.75rem; cursor: help;" 
                            data-bs-toggle="tooltip" 
                            data-bs-placement="top"
-                               title="Unterkante der PV-Fläche (Orange): Die tiefer gelegene Kante der PV-Fläche, typischerweise die Traufseite des Daches. Die orange Linie auf der Karte markiert diese PV-Flächen-Kante.">
+                               title="${t('param.bottomEdgeHelp')}">
                         </i>
                     </label>
                     <div class="d-flex align-items-center gap-1">
@@ -691,19 +694,19 @@ export const PVListRenderer = {
                                ${pv.autoCalculateField === 'heightBottom' ? 'checked' : ''}
                                onchange="PVListRenderer.setAutoCalculateField('${pv.id}', 'heightBottom', this.checked)">
                         <label class="form-check-label small" for="auto-calc-height-bottom-${pv.id}" style="white-space: nowrap;">
-                            Auto-calculate
+                            ${t('param.autoCalculate')}
                         </label>
                     </div>
                 </div>
                 
                 <div>
                     <label class="form-label mb-1" style="font-size: 0.75rem;">
-                        Distanz Ober- zur Unterkante (m)
+                        ${t('param.edgeDistance')}
                         <i class="bi bi-info-circle text-primary ms-1" 
                            style="font-size: 0.75rem; cursor: help;" 
                            data-bs-toggle="tooltip" 
                            data-bs-placement="top"
-                               title="Senkrechte Distanz: Der rechtwinklige Abstand zwischen Ober- und Unterkante der PV-Fläche (horizontale Projektion, nicht die schräge Dachlänge). Wird automatisch aus der Geometrie berechnet.">
+                               title="${t('param.verticalDistanceHelp')}">
                         </i>
                     </label>
                     <input type="text" class="form-control form-control-sm" 
@@ -717,19 +720,19 @@ export const PVListRenderer = {
                             onclick="PVListRenderer.swapTopBottom('${pv.id}')"
                             data-bs-toggle="tooltip"
                             data-bs-placement="top"
-                                 title="PV-Flächen-Kanten vertauschen: Tauscht die Ober- und Unterkante der PV-Fläche, wenn diese bei der Erstellung falsch zugeordnet wurden. Die Höhenwerte werden ebenfalls getauscht.">
-                        <i class="fas fa-exchange-alt fa-rotate-90"></i> Ober-/Unterkante tauschen
+                                 title="${t('param.swapEdgesHelp')}">
+                        <i class="fas fa-exchange-alt fa-rotate-90"></i> ${t('param.swapEdges')}
                     </button>
                 </div>
             </div>
             
             <div class="mb-2">
                 <label class="form-label mb-1" style="font-size: 0.75rem;">
-                    Referenzhöhe / Geländeoberkante (m)
+                    ${t('param.referenceHeight')}
                     <i class="bi bi-info-circle text-primary ms-1" style="font-size: 0.75rem; cursor: help;" 
                        data-bs-toggle="tooltip" 
                        data-bs-placement="top"
-                       title="Referenzhöhe über NN: Höhe des Geländes über dem Meeresspiegel. Auto-Calculate ermittelt die Höhe über Google Elevation API. Die Höhen der PV-Flächen-Kanten werden relativ zu dieser Höhe angegeben.">
+                       title="${t('param.referenceHeightRoofHelp')}">
                     </i>
                 </label>
                 <div class="d-flex align-items-center gap-1">
@@ -745,7 +748,7 @@ export const PVListRenderer = {
                            ${pv.autoCalculateReferenceHeight !== false ? 'checked' : ''}
                            onchange="PVListRenderer.toggleAutoCalculateReference('${pv.id}', this.checked)">
                     <label class="form-check-label small" for="auto-calc-ref-${pv.id}" style="white-space: nowrap;">
-                        Auto-calculate
+                        ${t('param.autoCalculate')}
                     </label>
                 </div>
             </div>
@@ -877,7 +880,7 @@ export const PVListRenderer = {
         
         // Update modal content
         const message = document.getElementById('pvAreaDeleteMessage');
-        message.innerHTML = `Möchten Sie die PV-Fläche "<strong>${displayName}</strong>" wirklich löschen?`;
+        message.innerHTML = `${t('delete.confirmPVWithName', { name: displayName })}`;
         
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('pvAreaDeleteModal'));
@@ -921,7 +924,7 @@ export const PVListRenderer = {
     getTopographyStatus(pv) {
         // Show warning if area changed but Best-Fit is not active
         if (pv.topographyOutdated && pv.topographyMode !== 'plane') {
-            return '<div class="text-danger small mb-2" style="font-size: 0.75rem;"><i class="bi bi-exclamation-triangle me-1"></i>Fläche wurde verändert - Topografie prüfen</div>';
+            return `<div class="text-danger small mb-2" style="font-size: 0.75rem;"><i class="bi bi-exclamation-triangle me-1"></i>${t('topo.areaChanged')}</div>`;
         }
         return '';
     },
@@ -958,7 +961,7 @@ export const PVListRenderer = {
             return '<i class="bi bi-exclamation-circle me-2"></i>Topografie definieren!';
         }
         if (pv.topographyOutdated && pv.topographyMode !== 'plane') {
-            return '<i class="bi bi-arrow-repeat me-2"></i>Topografie prüfen';
+            return `<i class="bi bi-arrow-repeat me-2"></i>${t('topo.check')}`;
         }
         // All properly defined topography modes show "Topografie verwalten"
         return '<i class="bi bi-geo-alt me-2"></i>Topografie verwalten';
@@ -1028,7 +1031,7 @@ export const PVListRenderer = {
         };
         
         StateManager.addPVArea(duplicate);
-        UIManager.showMessage('PV-Fläche wurde dupliziert!', 'Erfolg');
+        UIManager.showMessage(t('pvList.duplicated'), t('common.success'));
     },
     
     /**
@@ -1321,7 +1324,7 @@ export const PVListRenderer = {
             }
         } catch (error) {
             console.error('Error fetching elevation data:', error);
-            UIManager.showMessage('Fehler beim Abrufen der Höhendaten. Bitte manuell eingeben.', 'Fehler');
+            UIManager.showMessage(t('error.heightDataFetch'), t('common.error'));
         }
     },
     
@@ -1640,7 +1643,7 @@ export const PVListRenderer = {
         // Create content for corner heights dialog
         const content = `
             <div class="mb-3">
-                <p class="small text-muted mb-3">Definieren Sie die Höhen der einzelnen Eckpunkte. Die Werte werden automatisch auf eine Best-Fit-Ebene projiziert.</p>
+                <p class="small text-muted mb-3"><p class="small text-muted mb-3">${t('corner.description')}</p></p>
                 
                 ${pv.corners.map((corner, index) => `
                 <div class="row mb-2">
@@ -1653,7 +1656,7 @@ export const PVListRenderer = {
                                    id="corner-height-${index}" 
                                    value="${corner.height || ''}" 
                                    step="0.1" 
-                                   placeholder="Höhe in m">
+                                   placeholder="${t('corner.heightPlaceholder')}">
                             <span class="input-group-text">m</span>
                         </div>
                     </div>
@@ -1664,7 +1667,7 @@ export const PVListRenderer = {
                     <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" id="auto-heights" checked>
                         <label class="form-check-label small" for="auto-heights">
-                            Höhen automatisch aus Google Elevation API abrufen
+                            ${t('corner.fetchHeights')}
                         </label>
                     </div>
                     <div class="form-check">
@@ -1678,11 +1681,11 @@ export const PVListRenderer = {
             
             <div class="d-flex justify-content-end gap-2 mt-3">
                 <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-                <button class="btn btn-sm btn-primary" onclick="PVListRenderer.saveCornerHeights('${pvId}')">Übernehmen</button>
+                <button class="btn btn-sm btn-primary" onclick="PVListRenderer.saveCornerHeights('${pvId}')">${t('common.apply')}</button>
             </div>
         `;
         
-        UIManager.showMessage(content, 'Eckpunkt-Höhen');
+        UIManager.showMessage(content, t('corner.heights'));
     },
     
     /**
@@ -1709,7 +1712,7 @@ export const PVListRenderer = {
         const modal = bootstrap.Modal.getInstance(document.getElementById('messageModal'));
         if (modal) modal.hide();
         
-        UIManager.showMessage('Eckpunkt-Höhen wurden gespeichert', 'Erfolg');
+        UIManager.showMessage(t('corner.heightsSaved'), t('common.success'));
     },
     
     /**

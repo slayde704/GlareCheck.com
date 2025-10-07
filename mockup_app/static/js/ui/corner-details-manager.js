@@ -6,6 +6,9 @@
 import { StateManager } from '../core/state-manager.js';
 import { MapManager } from '../core/map-manager.js';
 
+// i18n helper
+const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
+
 export const CornerDetailsManager = {
     currentPVId: null,
     updateInterval: null,
@@ -607,7 +610,7 @@ export const CornerDetailsManager = {
                     ${pv.autoCalculateTerrainHeights === false ? `
                     <button class="btn btn-sm btn-outline-primary"
                             onclick="CornerDetailsManager.calculateTerrainHeights()"
-                            title="Höhen jetzt abrufen">
+                            title="${t('corner.fetchHeightsNow')}">
                         <i class="bi bi-arrow-clockwise"></i> Höhen abrufen
                     </button>
                     ` : ''}
@@ -626,7 +629,7 @@ export const CornerDetailsManager = {
                                        style="font-size: 0.75rem; cursor: help;"
                                        data-bs-toggle="tooltip"
                                        data-bs-placement="top"
-                                       title="Höhe über NN (Normalnull)"></i>
+                                       title="${t('corner.heightAboveSeaLevel')}"></i>
                                 </th>
                                 <th style="width: 10%;"></th>
                             </tr>
@@ -671,7 +674,7 @@ export const CornerDetailsManager = {
                                     ${corners.length > 3 && !pv.locked ? `
                                         <button class="btn btn-sm btn-link p-0 text-danger"
                                                 onclick="CornerDetailsManager.deleteCorner(${index})"
-                                                title="Eckpunkt löschen">
+                                                title="${t('corner.deletePoint')}">
                                             <i class="bi bi-trash" style="font-size: 0.9rem;"></i>
                                         </button>
                                     ` : ''}
@@ -726,13 +729,13 @@ export const CornerDetailsManager = {
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                <strong>Raster-Update erforderlich!</strong>
-                                <div class="small mt-1">Die Flächengeometrie wurde geändert. Klicken Sie auf "Raster neu berechnen", um die Stützpunkte und Höhen zu aktualisieren.</div>
+                                <strong>${t('grid.updateRequired')}</strong>
+                                <div class="small mt-1">${t('grid.geometryChanged')}</div>
                             </div>
                             <button class="btn btn-sm btn-danger ms-3"
                                     onclick="CornerDetailsManager.confirmGridUpdate()"
                                     ${pv.locked ? 'disabled' : ''}>
-                                <i class="bi bi-arrow-repeat me-1"></i>Raster neu berechnen
+                                <i class="bi bi-arrow-repeat me-1"></i>${t('grid.recalculate')}
                             </button>
                         </div>
                     </div>
@@ -831,7 +834,7 @@ export const CornerDetailsManager = {
                                     <td class="text-center">
                                         <button class="btn btn-sm btn-link p-0 text-danger"
                                                 onclick="CornerDetailsManager.deleteSupportPoint(${index})"
-                                                title="Löschen"
+                                                title="${t('common.delete')}"
                                                 ${pv.locked ? 'disabled' : ''}>
                                             <i class="bi bi-trash" style="font-size: 0.8rem;"></i>
                                         </button>
@@ -899,23 +902,22 @@ export const CornerDetailsManager = {
                         <i class="bi bi-exclamation-triangle me-2"></i>Wichtig: Dachhöhen eingeben
                     </h6>
                     <p class="mb-2" style="background-color: #fff3cd; padding: 8px; border-radius: 4px; border-left: 3px solid #ffc107;">
-                        <strong style="color: #ff6b35;">➤ Geben Sie die Höhen der Dacheckpunkte ein!</strong><br>
-                        In der Spalte <strong>"Höhe über GOK"</strong> (grün markiert) tragen Sie die tatsächlichen Höhen der Dacheckpunkte 
-                        über dem Gelände ein. Diese Höhen definieren die Dachneigung, auf der die PV-Module aufgeständert werden.
+                        <strong style="color: #ff6b35;">${t('corner.enterHeightsPrompt')}</strong><br>
+                        ${t('corner.heightInstructions')}
                     </p>
                     <p class="mb-2">
-                        <strong>Was ist die Best-Fit-Ebene?</strong><br>
+                        <strong>${t('corner.whatIsBestFit')}</strong><br>
                         Bei aufgeständerten Dachanlagen wird angenommen, dass alle Eckpunkte auf einer gemeinsamen Dachfläche liegen. 
-                        Da reale Dächer nicht immer perfekt eben sind, berechnet das System automatisch eine Best-Fit-Ebene, 
+                        Da reale Dächer nicht immer perfekt eben sind, berechnet das System automatisch eine ${t('corner.bestFit')}-Ebene, 
                         die bestmöglich durch alle Eckpunkte verläuft.
                     </p>
                     <p class="mb-2">
-                        <strong>GOK = Geländeoberkante:</strong><br>
+                        <strong>${t('corner.gokLabel')}:</strong><br>
                         Die GOK bezeichnet die Höhe des natürlichen Geländes an der Stelle der PV-Anlage. 
                         Alle Höhenangaben in der Tabelle beziehen sich auf diese Referenzhöhe.
                     </p>
                     <p class="mb-0">
-                        <strong>Hinweis:</strong> Die Best-Fit-Ebene repräsentiert die tatsächliche Dachfläche, 
+                        <strong>Hinweis:</strong> Die ${t('corner.bestFit')}-Ebene repräsentiert die tatsächliche Dachfläche, 
                         auf der die PV-Module aufgeständert montiert werden. Die Simulation verwendet diese berechnete 
                         Ebene als Grundlage für die Aufständerung.
                     </p>
@@ -923,12 +925,12 @@ export const CornerDetailsManager = {
                 
                 <div class="mb-3">
                     <label class="form-label mb-1" style="font-size: 0.875rem; font-weight: 600;">
-                        Referenzhöhe / Geländeoberkante (m über NN)
+                        ${t('param.referenceHeight')}
                         <i class="bi bi-info-circle text-primary ms-1" 
                            style="font-size: 0.75rem; cursor: help;" 
                            data-bs-toggle="tooltip" 
                            data-bs-placement="top"
-                           title="Referenzhöhe über NN: Höhe des Geländes über dem Meeresspiegel. Auto-Calculate ermittelt die Höhe über Google Elevation API. Die Höhen der PV-Flächen-Kanten werden relativ zu dieser Höhe angegeben.">
+                           title="${t('param.referenceHeightRoofHelp')}">
                         </i>
                     </label>
                     <div class="d-flex align-items-center gap-1">
@@ -968,7 +970,7 @@ export const CornerDetailsManager = {
                                     <small class="text-muted">(m über GOK)</small>
                                 </th>
                                 <th style="width: 100px; text-align: center;">
-                                    Best-Fit<br>
+                                    ${t('corner.bestFit')}<br>
                                     <small class="text-muted">(m über GOK)</small>
                                 </th>
                                 <th style="width: 100px; text-align: center;">
@@ -1006,7 +1008,7 @@ export const CornerDetailsManager = {
                                                style="font-size: 0.85rem; padding: 0.375rem 0.5rem; ${pv.locked ? 'background-color: #f8f9fa;' : 'background-color: #fffdf0; border: 2px solid #ffc107;'}"
                                                value="${pv.cornerHeights[index].toFixed(2)}"
                                                step="0.1"
-                                               placeholder="Höhe eingeben"
+                                               placeholder="${t('corner.enterHeight')}"
                                                onchange="CornerDetailsManager.updateCornerHeight(${index}, this.value)"
                                                ${pv.locked ? 'readonly' : ''}>
                                     </td>
@@ -1024,7 +1026,7 @@ export const CornerDetailsManager = {
                                         ${corners.length > 3 && !pv.locked ? `
                                             <button class="btn btn-sm btn-link p-0 text-danger" 
                                                     onclick="CornerDetailsManager.deleteCorner(${index})"
-                                                    title="Eckpunkt löschen">
+                                                    title="${t('corner.deletePoint')}">
                                                 <i class="bi bi-trash" style="font-size: 0.9rem;"></i>
                                             </button>
                                         ` : ''}
@@ -1068,7 +1070,7 @@ export const CornerDetailsManager = {
                                        data-bs-toggle="tooltip" 
                                        data-bs-placement="left" 
                                        data-bs-html="true"
-                                       title="<strong>PV-Fläche ist gesperrt</strong><br>Entsperren Sie die PV-Fläche über den Sperr-Button in der PV-Liste."></i>
+                                       title="${t('pvList.lockedHelp')}"></i>
                                 ` : ''}
                             </div>
                             
@@ -1132,18 +1134,18 @@ export const CornerDetailsManager = {
                                 <i class="bi bi-lock text-warning" 
                                    style="cursor: help;" 
                                    data-bs-toggle="tooltip" 
-                                   data-bs-placement="left" 
+                                   data-bs-placement="left"
                                    data-bs-html="true"
-                                   title="<strong>PV-Fläche ist gesperrt</strong><br>Entsperren Sie die PV-Fläche über den Sperr-Button in der PV-Liste, um die Koordinaten bearbeiten zu können."></i>
+                                   title="${t('pvList.lockedEditHelp')}"></i>
                             ` : '') 
                         : 
                             (this.editingCorner === index ? '' : (pv.locked ? `
                                 <i class="bi bi-lock text-warning" 
                                    style="cursor: help;" 
                                    data-bs-toggle="tooltip" 
-                                   data-bs-placement="left" 
+                                   data-bs-placement="left"
                                    data-bs-html="true"
-                                   title="<strong>PV-Fläche ist gesperrt</strong><br>Entsperren Sie die PV-Fläche über den Sperr-Button in der PV-Liste, um die Koordinaten bearbeiten zu können."></i>
+                                   title="${t('pvList.lockedEditHelp')}"></i>
                             ` : `
                                 <button class="btn btn-sm btn-link text-primary p-0" onclick="CornerDetailsManager.startEdit(${index})" title="Koordinaten bearbeiten">
                                     <i class="bi bi-pencil-square"></i>
@@ -1187,7 +1189,7 @@ export const CornerDetailsManager = {
                             </div>
                         </div>
                         <div class="mt-2">
-                            <label class="form-label small mb-1">Resultierende Höhe (Best-Fit)</label>
+                            <label class="form-label small mb-1">${t('corner.resultingHeight')}</label>
                             <div class="input-group input-group-sm">
                                 <input type="text" 
                                        class="form-control" 
@@ -1435,7 +1437,7 @@ export const CornerDetailsManager = {
         
         // Check if PV area is locked
         if (pv.locked) {
-            alert('Diese PV-Fläche ist gesperrt und kann nicht bearbeitet werden.');
+            alert(t('pvList.lockedAlert'));
             this.cancelEdit();
             return;
         }
@@ -1447,7 +1449,7 @@ export const CornerDetailsManager = {
         const newLng = parseFloat(lngInput.value);
         
         if (isNaN(newLat) || isNaN(newLng)) {
-            alert('Bitte geben Sie gültige Koordinaten ein');
+            alert(t('error.invalidCoordinates'));
             return;
         }
         
@@ -1737,7 +1739,7 @@ export const CornerDetailsManager = {
         const height = parseFloat(value);
         if (!isNaN(height)) {
             StateManager.updatePVArea(this.currentPVId, { referenceHeight: height });
-            // Re-render to update Best-Fit calculations
+            // Re-render to update ${t('corner.bestFit')} calculations
             this.render();
         }
     },
@@ -2013,7 +2015,7 @@ export const CornerDetailsManager = {
         
         const path = pv.polygon.getPath();
         if (path.getLength() <= 3) {
-            alert('Eine PV-Fläche muss mindestens 3 Eckpunkte haben.');
+            alert(t('error.minPoints'));
             return;
         }
         
@@ -2239,7 +2241,7 @@ export const CornerDetailsManager = {
         this.showSupportPointsOnMap();
 
         // Show success message
-        UIManager.showNotification('Raster und Höhen wurden erfolgreich aktualisiert', 'success');
+        UIManager.showNotification(t('grid.updated'), 'success');
     },
 
     /**
@@ -2462,7 +2464,7 @@ export const CornerDetailsManager = {
                         <ul class="mb-2">
                             <li><strong>Stützpunkte:</strong> Definieren die exakte Geländeform innerhalb der PV-Fläche</li>
                             <li><strong>Eckpunkte:</strong> Definieren die Höhe an den Ecken der PV-Fläche</li>
-                            <li><strong>Best-Fit-Ebene:</strong> Berechnet eine geneigte Ebene aus den Eckpunkten (nur sinnvoll bei planarer Fläche, benötigt keine extra Stützpunkte)</li>
+                            <li><strong>${t('corner.bestFit')}-Ebene:</strong> Berechnet eine geneigte Ebene aus den Eckpunkten (nur sinnvoll bei planarer Fläche, benötigt keine extra Stützpunkte)</li>
                         </ul>
                         <p class="mb-0"><strong>Tipp:</strong> Für eine schnelle Analyse nutzen Sie das 100 m Raster.</p>
                     </div>
@@ -2470,7 +2472,7 @@ export const CornerDetailsManager = {
                     ${usePlane ? `
                         <div class="alert alert-success mb-3">
                             <i class="bi bi-check-circle me-2"></i>
-                            <strong>Best-Fit-Ebene aktiv</strong>
+                            <strong>${t('corner.bestFit')}-Ebene aktiv</strong>
                             <p class="mb-0 mt-1 small">Eine geneigte Ebene wird aus den ${pv.corners ? pv.corners.length : 4} Eckpunkt-Höhen berechnet</p>
                         </div>
 
@@ -2484,7 +2486,7 @@ export const CornerDetailsManager = {
                             </label>
                         </div>
 
-                        <!-- Eckpunkt-Höhen Tabelle für Best-Fit-Ebene -->
+                        <!-- Eckpunkt-Höhen Tabelle für ${t('corner.bestFit')}-Ebene -->
                         <div class="table-responsive">
                             <table class="table table-sm table-hover mb-3" style="font-size: 0.8rem;">
                                 <thead class="table-light">
@@ -2493,7 +2495,7 @@ export const CornerDetailsManager = {
                                         <th style="width: 23%;">Breite</th>
                                         <th style="width: 23%;">Länge</th>
                                         <th style="width: 19%;">Geländehöhe</th>
-                                        <th style="width: 15%;">Best-Fit</th>
+                                        <th style="width: 15%;">${t('corner.bestFit')}</th>
                                         <th style="width: 8%;"></th>
                                     </tr>
                                 </thead>
@@ -2536,7 +2538,7 @@ export const CornerDetailsManager = {
                                                 ${(pv.corners || []).length > 3 && !pv.locked ? `
                                                     <button class="btn btn-sm btn-link p-0 text-danger"
                                                             onclick="CornerDetailsManager.deleteCorner(${index})"
-                                                            title="Eckpunkt löschen">
+                                                            title="${t('corner.deletePoint')}">
                                                         <i class="bi bi-trash" style="font-size: 0.9rem;"></i>
                                                     </button>
                                                 ` : ''}
@@ -2550,7 +2552,7 @@ export const CornerDetailsManager = {
                         ${(pv.corners || []).length > 0 ? `
                         <div class="alert alert-info" style="font-size: 0.75rem;">
                             <i class="bi bi-info-circle me-1"></i>
-                            <strong>Best-Fit-Ebene:</strong> Die berechneten Höhen zeigen die optimale Ebene durch alle Eckpunkte.
+                            <strong>${t('corner.bestFit')}-Ebene:</strong> Die berechneten Höhen zeigen die optimale Ebene durch alle Eckpunkte.
                             Abweichungen werden farblich hervorgehoben:
                             <span class="text-success">< 0.5m</span>,
                             <span class="text-warning">0.5-1.0m</span>,
@@ -2585,7 +2587,7 @@ export const CornerDetailsManager = {
                         ${!usePlane ? `
                         <button class="btn btn-outline-primary btn-sm" onclick="CornerDetailsManager.quickGrid100m()"
                                 data-bs-toggle="tooltip" data-bs-placement="top"
-                                title="Für eine schnelle Analyse nutzen Sie das 100 m Raster">
+                                title="${t('grid.quickAnalysisHint')}">
                             <i class="bi bi-grid-3x3 me-2"></i>100 m Raster erstellen
                         </button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="CornerDetailsManager.showGridOptions()">
@@ -2598,7 +2600,7 @@ export const CornerDetailsManager = {
                             <i class="bi bi-upload me-2"></i>XYZ/CSV importieren
                         </button>
                         <button class="btn btn-outline-secondary btn-sm" onclick="CornerDetailsManager.useBestFitPlane()">
-                            <i class="bi bi-square me-2"></i>Best-Fit-Ebene verwenden
+                            <i class="bi bi-square me-2"></i>${t('corner.bestFit')}-Ebene verwenden
                         </button>
                         ` : `
                         <button class="btn btn-outline-secondary btn-sm" onclick="CornerDetailsManager.switchToPoints()">
@@ -2772,7 +2774,7 @@ export const CornerDetailsManager = {
                                             </div>
                                             <h6 class="card-title">Ebene Fläche</h6>
                                             <p class="card-text small text-muted">
-                                                Best-Fit-Ebene aus Eckpunkten
+                                                ${t('corner.bestFit')}-Ebene aus Eckpunkten
                                             </p>
                                             <div class="badge bg-secondary">Einfach</div>
                                         </div>
@@ -2929,7 +2931,7 @@ export const CornerDetailsManager = {
                     topographyOutdated: false
                 });
 
-                UIManager.showNotification('Ebene Fläche angenommen - Best-Fit-Ebene wird aus Eckpunkten berechnet', 'info');
+                UIManager.showNotification(t('topo.bestFitActive'), 'info');
 
                 // Open panel to show corner heights
                 this.open(pvId);
@@ -3090,7 +3092,7 @@ export const CornerDetailsManager = {
         const format = document.getElementById('importFileFormat').value;
 
         if (!fileInput.files[0]) {
-            alert('Bitte wählen Sie eine Datei aus');
+            alert(t('import.selectFile'));
             return;
         }
 
@@ -3099,7 +3101,7 @@ export const CornerDetailsManager = {
         const pv = StateManager.getPVArea(this.currentPVId);
 
         if (!pv) {
-            alert('Keine PV-Fläche gefunden');
+            alert(t('error.noPVArea'));
             return;
         }
 
@@ -3155,7 +3157,7 @@ export const CornerDetailsManager = {
 
             UIManager.showNotification(`${points.length} Punkte erfolgreich importiert`, 'success');
         } else {
-            alert('Keine gültigen Punkte in der Datei gefunden oder alle Punkte liegen außerhalb der PV-Fläche');
+            alert(t('import.noValidPoints'));
         }
     },
 
@@ -3222,7 +3224,7 @@ export const CornerDetailsManager = {
         StateManager.updatePVArea(this.currentPVId, {
             topographyOutdated: false
         });
-        UIManager.showNotification('Topografie bestätigt', 'success');
+        UIManager.showNotification(t('topo.confirmed'), 'success');
         this.render();
     },
 
@@ -3283,7 +3285,7 @@ export const CornerDetailsManager = {
             bestFitHeights.push(height);
         }
 
-        // Add height labels showing Best-Fit plane heights at each corner
+        // Add height labels showing ${t('corner.bestFit')} plane heights at each corner
         this.planeHeightLabels = [];
 
         corners.forEach((corner, index) => {
@@ -3861,7 +3863,7 @@ export const CornerDetailsManager = {
         const format = document.getElementById('importFormat').value;
 
         if (!fileInput.files[0]) {
-            alert('Bitte wählen Sie eine Datei aus');
+            alert(t('import.selectFile'));
             return;
         }
 
@@ -3913,7 +3915,7 @@ export const CornerDetailsManager = {
 
             alert(`${points.length} Punkte erfolgreich importiert`);
         } else {
-            alert('Keine gültigen Punkte innerhalb der Fläche gefunden');
+            alert(t('import.noPointsInArea'));
         }
     },
 
@@ -3951,7 +3953,7 @@ export const CornerDetailsManager = {
      * Clear all support points
      */
     clearAllSupportPoints() {
-        if (confirm('Alle Stützpunkte löschen?')) {
+        if (confirm(t('support.deleteAll'))) {
             StateManager.updatePVArea(this.currentPVId, { supportPoints: [] });
             this.render();
             this.hideSupportPointsOnMap();
@@ -3999,7 +4001,7 @@ export const CornerDetailsManager = {
 
         } catch (error) {
             console.error('Error updating support point heights:', error);
-            alert('Fehler beim Abrufen der Höhendaten');
+            alert(t('error.heightDataFetch'));
         }
     },
 

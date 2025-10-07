@@ -10,6 +10,9 @@ import { GeometryUtils } from '../utils/geometry.js';
 import { PolygonEnhancer } from './polygon-enhancer.js';
 import { Dimensions } from './dimensions.js';
 
+// i18n helper
+const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
+
 export const DrawingManager = {
     // Current drawing state
     _currentDrawingType: null,
@@ -2303,7 +2306,7 @@ export const DrawingManager = {
                     topographyMode: 'plane'
                 });
 
-                UIManager.showNotification('Ebene Fläche angenommen - Best-Fit-Ebene wird aus Eckpunkten berechnet', 'info');
+                UIManager.showNotification(t('topo.bestFitActive'), 'info');
                 break;
         }
     },
@@ -2320,7 +2323,7 @@ export const DrawingManager = {
             }
         }
 
-        UIManager.showNotification('Sie können die Topografie später über "Geländehöhe verwalten" definieren', 'info');
+        UIManager.showNotification(t('topo.skipMessage'), 'info');
     },
 
     /**
