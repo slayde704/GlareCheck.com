@@ -53,6 +53,12 @@ export const TopographySourceManager = {
         localStorage.setItem('topoSource', 'google');
         this.unlockMenuItems();
 
+        // Hide elevation display (Google API doesn't show live elevation)
+        const elevDisplay = document.getElementById('elevationDisplay');
+        if (elevDisplay) {
+            elevDisplay.style.display = 'none';
+        }
+
         UIManager.showNotification(t('topo.success'), 'success');
         console.log('Google Elevation API selected');
     },
@@ -104,6 +110,12 @@ export const TopographySourceManager = {
 
             this.drawBoundingBox();
             this.unlockMenuItems();
+
+            // Show elevation display for custom data
+            const elevDisplay = document.getElementById('elevationDisplay');
+            if (elevDisplay) {
+                elevDisplay.style.display = 'block';
+            }
 
             UIManager.showNotification(t('topo.success'), 'success');
             console.log('Custom elevation data loaded:', this.customDataBounds);
@@ -458,6 +470,12 @@ export const TopographySourceManager = {
 
         localStorage.removeItem('topoSource');
         localStorage.removeItem('topoCustomFile');
+
+        // Hide elevation display
+        const elevDisplay = document.getElementById('elevationDisplay');
+        if (elevDisplay) {
+            elevDisplay.style.display = 'none';
+        }
 
         this.lockMenuItems();
 
