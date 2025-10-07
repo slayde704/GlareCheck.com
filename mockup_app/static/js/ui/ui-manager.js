@@ -3,41 +3,44 @@
  * Handles all UI interactions including panels, modals, and messages
  */
 
+// Helper function to access i18n
+const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
+
 export const UIManager = {
     /**
      * Show a message using Bootstrap modal
      * @param {string} message - The message to display
-     * @param {string} title - Modal title (default: 'Hinweis')
+     * @param {string} title - Modal title (default: translated 'Info')
      */
-    showMessage(message, title = 'Hinweis') {
+    showMessage(message, title = null) {
         // Use existing modal from the DOM
         const modal = document.getElementById('messageModal');
         if (!modal) {
             console.error('Message modal not found in DOM');
             return;
         }
-        
+
         // Update content
         const modalTitle = document.getElementById('messageModalLabel');
         const modalBody = document.getElementById('messageModalBody');
         const modalFooter = modal.querySelector('.modal-footer');
-        
-        if (modalTitle) modalTitle.textContent = title;
+
+        if (modalTitle) modalTitle.textContent = title || t('common.info');
         if (modalBody) modalBody.innerHTML = message;
-        
+
         // Hide footer if message contains custom buttons (like in delete dialog)
         if (modalFooter) {
             const hasCustomButtons = message.includes('<button');
             modalFooter.style.display = hasCustomButtons ? 'none' : 'flex';
         }
-        
+
         // Close any open modals first
         const openModals = document.querySelectorAll('.modal.show');
         openModals.forEach(openModal => {
             const instance = bootstrap.Modal.getInstance(openModal);
             if (instance) instance.hide();
         });
-        
+
         // Show modal after a small delay to allow previous modals to close
         setTimeout(() => {
             const bsModal = new bootstrap.Modal(modal);
@@ -51,20 +54,20 @@ export const UIManager = {
      */
     showPanel(panelName) {
         const targetPanel = document.getElementById(`panel-${panelName}`);
-        
+
         if (!targetPanel) {
             console.warn('Panel not found:', panelName);
             return;
         }
-        
+
         // Hide all panels
         document.querySelectorAll('.content-panel').forEach(panel => {
             panel.classList.remove('active');
         });
-        
+
         // Show target panel
         targetPanel.classList.add('active');
-        
+
         // Update menu state
         document.querySelectorAll('.menu-item').forEach(item => {
             item.classList.remove('active');
@@ -72,7 +75,7 @@ export const UIManager = {
                 item.classList.add('active');
             }
         });
-        
+
         // Collapse menu when showing a panel
         const menuSection = document.getElementById('menu-section');
         if (menuSection) {
@@ -86,23 +89,23 @@ export const UIManager = {
     backToMenu() {
         const activePanel = document.querySelector('.content-panel.active');
         const menuSection = document.getElementById('menu-section');
-        
+
         // Add sliding-out animation to active panel
         if (activePanel) {
             activePanel.classList.add('sliding-out');
             activePanel.classList.remove('active');
-            
+
             // Remove panel after animation completes
             setTimeout(() => {
                 activePanel.classList.remove('sliding-out');
             }, 300);
         }
-        
+
         // Show menu again
         if (menuSection) {
             menuSection.classList.remove('collapsed');
         }
-        
+
         // Clear active menu items
         document.querySelectorAll('.menu-item').forEach(item => {
             item.classList.remove('active');
@@ -117,21 +120,21 @@ export const UIManager = {
         const details = document.getElementById(`details-${pvId}`);
         const chevron = document.getElementById(`chevron-${pvId}`);
         const pvItem = document.getElementById(`pv-item-${pvId}`);
-        
+
         if (details && chevron) {
             const isExpanded = details.classList.contains('expanded');
-            
+
             if (isExpanded) {
                 // Collapse with animation
                 details.style.maxHeight = details.scrollHeight + 'px';
                 details.offsetHeight; // Force reflow
                 details.style.maxHeight = '0';
-                
+
                 setTimeout(() => {
                     details.classList.remove('expanded');
                     details.style.maxHeight = '';
                 }, 300);
-                
+
                 chevron.classList.remove('fa-chevron-down');
                 chevron.classList.add('fa-chevron-right');
                 if (pvItem) {
@@ -143,11 +146,11 @@ export const UIManager = {
                 details.style.maxHeight = '0';
                 details.offsetHeight; // Force reflow
                 details.style.maxHeight = details.scrollHeight + 'px';
-                
+
                 setTimeout(() => {
                     details.style.maxHeight = '';
                 }, 300);
-                
+
                 chevron.classList.remove('fa-chevron-right');
                 chevron.classList.add('fa-chevron-down');
                 if (pvItem) {
@@ -182,7 +185,7 @@ export const UIManager = {
                 this.backToMenu();
             });
         }
-        
+
         // Don't show default hint on initialization - let menu be visible
     },
 
@@ -191,9 +194,10 @@ export const UIManager = {
      * @param {boolean} show - Whether to show or hide the spinner
      * @param {string} message - Optional loading message
      */
-    showLoading(show, message = 'Lade...') {
+    showLoading(show, message = null) {
+        const defaultMessage = message || t('common.loading');
         let spinner = document.getElementById('loadingSpinner');
-        
+
         if (show) {
             if (!spinner) {
                 const spinnerHtml = `
@@ -202,7 +206,7 @@ export const UIManager = {
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
-                            <div class="mt-2 text-primary fw-bold" id="loadingMessage">${message}</div>
+                            <div class="mt-2 text-primary fw-bold" id="loadingMessage">${defaultMessage}</div>
                         </div>
                     </div>
                 `;
@@ -211,7 +215,7 @@ export const UIManager = {
                 spinner.style.display = 'block';
                 const messageEl = document.getElementById('loadingMessage');
                 if (messageEl) {
-                    messageEl.textContent = message;
+                    messageEl.textContent = defaultMessage;
                 }
             }
         } else {
@@ -267,6 +271,57 @@ export const UIManager = {
         if (element) {
             element.classList.remove(className);
         }
+    },
+
+    /**
+     * Show a notification toast
+     * @param {string} message - Message to display
+     * @param {string} type - Type: 'success', 'error', 'warning', 'info'
+     */
+    showNotification(message, type = 'info') {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Map type to Bootstrap class
+        const typeClass = {
+            'success': 'bg-success text-white',
+            'error': 'bg-danger text-white',
+            'warning': 'bg-warning text-dark',
+            'info': 'bg-info text-white'
+        }[type] || 'bg-secondary text-white';
+
+        // Create toast
+        const toastId = 'toast-' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast ${typeClass}" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header ${typeClass}">
+                    <strong class="me-auto">${t('common.' + type)}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+        // Show toast
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
+        toast.show();
+
+        // Remove toast element after it's hidden
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
     }
 };
 
@@ -281,5 +336,6 @@ export const {
     updateElement,
     toggleElement,
     addClass,
-    removeClass
+    removeClass,
+    showNotification
 } = UIManager;
