@@ -921,9 +921,12 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="header" style="display: flex; align-items: center; padding: 10px 20px;">
-        <img src="/logos/GlearCheck_Logo_5.png" alt="GlareCheck Logo" style="height: 40px; margin-right: 15px;">
-        <h1 style="margin: 0;">GlareCheck.com</h1>
+    <header class="header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 20px;">
+        <div style="display: flex; align-items: center;">
+            <img src="/logos/GlearCheck_Logo_5.png" alt="GlareCheck Logo" style="height: 40px; margin-right: 15px;">
+            <h1 style="margin: 0;">GlareCheck.com</h1>
+        </div>
+        <div id="languageSwitcherContainer"></div>
     </header>
     
     <!-- Main Container -->
@@ -1725,7 +1728,21 @@
     
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
+
+    <!-- i18n System -->
+    <script src="/static/js/i18n/translations.js"></script>
+    <script src="/static/js/ui/language-switcher.js"></script>
+
+    <script>
+        // Initialize language switcher on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('languageSwitcherContainer');
+            if (container && window.LanguageSwitcher) {
+                container.innerHTML = window.LanguageSwitcher.render();
+            }
+        });
+    </script>
+
     <!-- Google Maps API will be loaded dynamically after modules are ready -->
 </body>
 </html>

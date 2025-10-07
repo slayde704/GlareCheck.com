@@ -970,10 +970,12 @@ export const DrawingManager = {
                     autoCalculateSupportHeights: true
                 });
 
-                // Show the height definition dialog
-                setTimeout(() => {
-                    this._showHeightDefinitionDialog(newPVArea.id);
-                }, 500);
+                // Don't need embedded listeners anymore - CornerDetailsManager handles it
+                // The global listeners in CornerDetailsManager will track polygon changes
+                console.log('Field PV created, global listeners will handle topography tracking');
+
+                // Removed automatic topography dialog for field installations
+                // User can access it via "Geländehöhe verwalten" button
             }
 
             // Add click handler for selecting PV area
@@ -2055,8 +2057,9 @@ export const DrawingManager = {
 
     /**
      * Show height definition dialog for new field installations
+     * @deprecated - Removed automatic dialog after drawing
      */
-    _showHeightDefinitionDialog(pvId) {
+    _showHeightDefinitionDialog_DEPRECATED(pvId) {
         const pv = StateManager.getPVArea(pvId);
         if (!pv) return;
 

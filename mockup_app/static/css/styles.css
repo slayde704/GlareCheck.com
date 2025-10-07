@@ -2,22 +2,64 @@
  * @fileoverview Main stylesheet for Glare Check application
  */
 
-/* CSS Variables */
+/* CSS Variables - Design System */
 :root {
-    --primary-blue: #4274a5;
-    --accent-yellow: #ffc107;
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --background-light: #f8fafc;
-    --border-color: #e2e8f0;
+    /* Primary Colors */
+    --primary: #0066cc;          /* Blue - main brand color */
+    --primary-dark: #0052a3;     /* Darker blue for hover states */
+    --primary-light: #3385d6;    /* Lighter blue for accents */
+    --primary-bg: #f0f7ff;       /* Very light blue background */
+
+    /* Secondary Colors */
+    --secondary: #6c757d;        /* Gray */
+    --info: #17a2b8;            /* Cyan */
+    --warning: #ffc107;         /* Yellow */
+    --danger: #dc3545;          /* Red */
+    --success: #28a745;         /* Green */
+
+    /* Text Colors */
+    --text-primary: #2c3e50;    /* Dark blue-gray */
+    --text-secondary: #6c757d;  /* Medium gray */
+    --text-muted: #95a5a6;      /* Light gray */
+    --text-white: #ffffff;
+
+    /* Background Colors */
+    --bg-white: #ffffff;
+    --bg-light: #f8f9fa;
+    --bg-lighter: #fbfcfd;
+    --bg-hover: #f1f3f5;
+
+    /* Border Colors */
+    --border-color: #dee2e6;
+    --border-light: #e9ecef;
+    --border-dark: #adb5bd;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+    /* Layout */
     --header-height: 60px;
     --sidebar-width: 380px;
+
+    /* Transitions */
+    --transition-fast: 150ms ease-in-out;
+    --transition: 300ms ease-in-out;
+    --transition-slow: 500ms ease-in-out;
+
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
 }
 
 /* Base Styles */
 body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background-color: var(--background-light);
+    background-color: var(--bg-hover);
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -42,7 +84,7 @@ body {
 .header h1 {
     font-size: 1.5rem;
     margin: 0;
-    color: var(--primary-blue);
+    color: var(--primary);
     font-weight: 600;
 }
 
@@ -92,12 +134,12 @@ body {
 }
 
 .menu-item:hover {
-    background-color: var(--background-light);
+    background-color: var(--bg-hover);
 }
 
 .menu-item.active {
-    background-color: #e3f2fd;
-    color: var(--primary-blue);
+    background-color: var(--primary-bg);
+    color: var(--primary);
     font-weight: 500;
 }
 
@@ -159,7 +201,7 @@ body {
 
 .search-input:focus {
     outline: none;
-    border-color: var(--primary-blue);
+    border-color: var(--primary);
 }
 
 /* Professional Menu Headers */
@@ -184,7 +226,7 @@ body {
 
 .panel-header h5 i {
     font-size: 1.2rem;
-    color: #4274a5;
+    color: var(--primary);
 }
 
 .panel-header .btn-back {
@@ -226,7 +268,7 @@ body {
 }
 
 .main-menu-header h4 i {
-    color: #4274a5;
+    color: var(--primary);
 }
 
 .menu-item {
@@ -246,13 +288,13 @@ body {
 
 .menu-item:hover {
     background: #f8f9fa;
-    border-color: #4274a5;
+    border-color: var(--primary);
     transform: translateX(4px);
 }
 
 .menu-item.active {
-    background: linear-gradient(135deg, #4274a5 0%, #5a86c7 100%);
-    border-color: #4274a5;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-color: var(--primary);
     color: white;
 }
 
@@ -379,7 +421,7 @@ body {
 }
 
 .element-item:hover {
-    background-color: var(--background-light);
+    background-color: var(--bg-hover);
 }
 
 .pv-area-item .element-item {
@@ -488,11 +530,11 @@ body {
 }
 
 .pv-area-item.drag-over-top {
-    border-top: 3px solid #4274a5;
+    border-top: 3px solid var(--primary);
 }
 
 .pv-area-item.drag-over-bottom {
-    border-bottom: 3px solid #4274a5;
+    border-bottom: 3px solid var(--primary);
 }
 
 /* Corner Heights Panel */
@@ -519,7 +561,7 @@ body {
 
 #cornerHeightsPanel .panel-header h5 {
     margin: 0 0 10px 0;
-    color: var(--primary-blue);
+    color: var(--primary);
 }
 
 #cornerHeightsPanel .panel-body {
@@ -609,17 +651,17 @@ body {
 }
 
 @keyframes blink-border {
-    0%, 100% { 
-        box-shadow: 0 0 0 0 rgba(66, 116, 165, 0);
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(0, 102, 204, 0);
         background-color: transparent;
     }
-    25%, 75% { 
-        box-shadow: 0 0 10px 2px rgba(66, 116, 165, 0.8);
-        background-color: rgba(66, 116, 165, 0.1);
+    25%, 75% {
+        box-shadow: 0 0 10px 2px rgba(0, 102, 204, 0.8);
+        background-color: rgba(0, 102, 204, 0.1);
     }
-    50% { 
-        box-shadow: 0 0 20px 4px rgba(66, 116, 165, 1);
-        background-color: rgba(66, 116, 165, 0.2);
+    50% {
+        box-shadow: 0 0 20px 4px rgba(0, 102, 204, 1);
+        background-color: rgba(0, 102, 204, 0.2);
     }
 }
 
@@ -629,6 +671,296 @@ body {
 
 .polygon-blink {
     animation: blink 1s ease-in-out;
+}
+
+/* =============================================
+   Global Component Overrides
+   ============================================= */
+
+/* Bootstrap Button Overrides */
+.btn {
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: var(--shadow);
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+.btn-outline-secondary {
+    color: var(--secondary);
+    border-color: var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--border-dark);
+    color: var(--text-primary);
+}
+
+.btn-success {
+    background-color: var(--success);
+    border-color: var(--success);
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    border-color: var(--danger);
+}
+
+.btn-outline-danger {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.btn-warning {
+    background-color: var(--warning);
+    border-color: var(--warning);
+    color: var(--text-primary);
+}
+
+.btn-info {
+    background-color: var(--info);
+    border-color: var(--info);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+}
+
+/* Bootstrap Modal Overrides */
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    background-color: var(--bg-light);
+    border-bottom: 1px solid var(--border-light);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.modal-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    background-color: var(--bg-light);
+    border-top: 1px solid var(--border-light);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    padding: 1rem 1.5rem;
+}
+
+/* Bootstrap Card Overrides */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+.card:hover {
+    box-shadow: var(--shadow);
+}
+
+.card-header {
+    background-color: var(--bg-light);
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Bootstrap Badge Overrides */
+.badge {
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+}
+
+/* Bootstrap Alert Overrides */
+.alert {
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+}
+
+.alert-info {
+    background-color: var(--primary-bg);
+    color: #004085;
+    border-left: 4px solid var(--primary);
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid var(--warning);
+}
+
+.alert-success {
+    background-color: var(--primary-bg);
+    color: #155724;
+    border-left: 4px solid var(--success);
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid var(--danger);
+}
+
+/* Bootstrap Form Controls */
+.form-control,
+.form-select {
+    border-color: var(--border-color);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+}
+
+/* Bootstrap Table Overrides */
+.table {
+    font-size: 0.875rem;
+}
+
+.table thead th {
+    background-color: var(--bg-light);
+    border-bottom: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+/* Bootstrap Text Colors */
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-secondary {
+    color: var(--secondary) !important;
+}
+
+.text-success {
+    color: var(--success) !important;
+}
+
+.text-danger {
+    color: var(--danger) !important;
+}
+
+.text-warning {
+    color: var(--warning) !important;
+}
+
+.text-info {
+    color: var(--info) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Background Colors */
+.bg-primary {
+    background-color: var(--primary) !important;
+}
+
+.bg-success {
+    background-color: var(--success) !important;
+}
+
+.bg-danger {
+    background-color: var(--danger) !important;
+}
+
+.bg-warning {
+    background-color: var(--warning) !important;
+}
+
+.bg-info {
+    background-color: var(--info) !important;
+}
+
+.bg-secondary {
+    background-color: var(--secondary) !important;
+}
+
+.bg-light {
+    background-color: var(--bg-light) !important;
+}
+
+/* Border Colors */
+.border-primary {
+    border-color: var(--primary) !important;
+}
+
+.border-success {
+    border-color: var(--success) !important;
+}
+
+.border-danger {
+    border-color: var(--danger) !important;
+}
+
+.border-warning {
+    border-color: var(--warning) !important;
+}
+
+.border-info {
+    border-color: var(--info) !important;
 }
 
 /* Responsive adjustments */

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Debug Console Test</h1>
+    <p>Open browser console to see debug messages</p>
+    <script>
+        // Test if global listeners are being created
+        setTimeout(() => {
+            if (window.CornerDetailsManager && window.CornerDetailsManager.globalFieldListeners) {
+                console.log('Global field listeners:', window.CornerDetailsManager.globalFieldListeners);
+            } else {
+                console.log('CornerDetailsManager not found or no global listeners');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
