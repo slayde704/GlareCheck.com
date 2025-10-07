@@ -223,6 +223,7 @@ const translations = {
         'common.info': 'Information',
         'common.apply': 'Übernehmen',
         'common.details': 'Details',
+        'common.recommended': 'Empfohlen',
 
         // Menu
         'menu.main': 'Hauptmenü',
@@ -382,6 +383,28 @@ const translations = {
         'search.error': 'Fehler bei der Suche',
         'search.invalidCoordinates': 'Ungültige Koordinaten. Bitte verwenden Sie das Format: Breitengrad, Längengrad',
         'search.locationFound': 'Standort gefunden',
+
+        // Topography Source
+        'topo.source': 'Topografie-Quelle',
+        'topo.title': 'Höhendaten-Quelle wählen',
+        'topo.required': 'Wählen Sie zuerst eine Höhendaten-Quelle',
+        'topo.googleApi': 'Google Elevation API',
+        'topo.googleApiDesc': 'Automatische Höhenbestimmung über Google (empfohlen)',
+        'topo.customData': 'Eigene Höhendaten',
+        'topo.customDataDesc': 'Höhendaten als GeoTIFF oder XYZ hochladen',
+        'topo.uploadFile': 'Datei hochladen',
+        'topo.fileFormats': 'Unterstützte Formate: GeoTIFF (.tif, .tiff), XYZ (.xyz, .txt)',
+        'topo.coordinateSystem': 'Koordinatensystem: EPSG:4326 (WGS84) empfohlen',
+        'topo.minResolution': 'Mindestauflösung: 10 Meter Gitterweite',
+        'topo.warning': 'Hinweis: PV-Flächen, Betrachtungspunkte und weitere Objekte können nur im Bereich der Höhendaten platziert werden.',
+        'topo.fileSelected': 'Datei ausgewählt: {filename}',
+        'topo.processing': 'Datei wird verarbeitet...',
+        'topo.success': 'Höhendaten erfolgreich geladen',
+        'topo.error': 'Fehler beim Laden der Höhendaten',
+        'topo.invalidResolution': 'Auflösung zu gering. Mindestens 10m Gitterweite erforderlich.',
+        'topo.invalidFormat': 'Ungültiges Dateiformat. Bitte GeoTIFF oder XYZ verwenden.',
+        'topo.boundingBox': 'Abgedeckter Bereich',
+        'topo.changeSource': 'Quelle ändern',
     },
 
     en: {
@@ -603,6 +626,7 @@ const translations = {
         'common.info': 'Information',
         'common.apply': 'Apply',
         'common.details': 'Details',
+        'common.recommended': 'Recommended',
 
         // Menu
         'menu.main': 'Main Menu',
@@ -762,6 +786,28 @@ const translations = {
         'search.error': 'Search error',
         'search.invalidCoordinates': 'Invalid coordinates. Please use format: Latitude, Longitude',
         'search.locationFound': 'Location found',
+
+        // Topography Source
+        'topo.source': 'Topography Source',
+        'topo.title': 'Select Elevation Data Source',
+        'topo.required': 'Please select an elevation data source first',
+        'topo.googleApi': 'Google Elevation API',
+        'topo.googleApiDesc': 'Automatic elevation determination via Google (recommended)',
+        'topo.customData': 'Custom Elevation Data',
+        'topo.customDataDesc': 'Upload elevation data as GeoTIFF or XYZ',
+        'topo.uploadFile': 'Upload File',
+        'topo.fileFormats': 'Supported formats: GeoTIFF (.tif, .tiff), XYZ (.xyz, .txt)',
+        'topo.coordinateSystem': 'Coordinate system: EPSG:4326 (WGS84) recommended',
+        'topo.minResolution': 'Minimum resolution: 10 meter grid spacing',
+        'topo.warning': 'Note: PV areas, observation points and other objects can only be placed within the coverage area of the elevation data.',
+        'topo.fileSelected': 'File selected: {filename}',
+        'topo.processing': 'Processing file...',
+        'topo.success': 'Elevation data successfully loaded',
+        'topo.error': 'Error loading elevation data',
+        'topo.invalidResolution': 'Resolution too low. Minimum 10m grid spacing required.',
+        'topo.invalidFormat': 'Invalid file format. Please use GeoTIFF or XYZ.',
+        'topo.boundingBox': 'Coverage Area',
+        'topo.changeSource': 'Change Source',
     }
 };
 

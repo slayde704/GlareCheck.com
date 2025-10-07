@@ -938,7 +938,11 @@
                 <h6 class="menu-header" data-i18n="menu.main">Hauptmenü</h6>
                 <button class="menu-item" data-panel="search">
                     <i class="fas fa-search"></i>
-                    Adresssuche
+                    <span data-i18n="search.title">Adresssuche</span>
+                </button>
+                <button class="menu-item" data-panel="topo-source">
+                    <i class="fas fa-mountain"></i>
+                    <span data-i18n="topo.source">Topografie-Quelle</span>
                 </button>
                 <button class="menu-item" data-panel="pv-areas">
                     <i class="fas fa-solar-panel"></i>
@@ -946,15 +950,15 @@
                 </button>
                 <button class="menu-item" data-panel="observation-points">
                     <i class="fas fa-eye"></i>
-                    Betrachtungspunkte
+                    <span data-i18n="menu.observationPoints">Betrachtungspunkte</span>
                 </button>
                 <button class="menu-item" data-panel="excluded-areas">
                     <i class="fas fa-ban"></i>
-                    Excluded Areas
+                    <span data-i18n="menu.excludedAreas">Ausschlussbereiche</span>
                 </button>
                 <button class="menu-item" data-panel="obstacles">
                     <i class="fas fa-building"></i>
-                    Hindernisse
+                    <span data-i18n="menu.obstacles">Hindernisse</span>
                 </button>
             </div>
             
@@ -994,7 +998,93 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Topography Source Panel -->
+            <div class="content-panel" id="panel-topo-source">
+                <h6 class="menu-header" data-i18n="topo.title">Höhendaten-Quelle wählen</h6>
+                <button class="back-button" onclick="backToMenu()">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="button-text"><span data-i18n="menu.backToMain">Zurück zum Hauptmenü</span></span>
+                </button>
+
+                <div class="p-3">
+                    <!-- Google API Option -->
+                    <div class="card mb-3 border-primary" style="cursor: pointer;" onclick="selectTopoSource('google')">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-globe text-primary me-2"></i>
+                                <span data-i18n="topo.googleApi">Google Elevation API</span>
+                                <span class="badge bg-success ms-2" data-i18n="common.recommended" style="font-size: 0.7rem;">Empfohlen</span>
+                            </h6>
+                            <p class="card-text small text-muted mb-0" data-i18n="topo.googleApiDesc">
+                                Automatische Höhenbestimmung über Google (empfohlen)
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Custom Data Option -->
+                    <div class="card mb-3" style="cursor: pointer;" onclick="selectTopoSource('custom')">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-upload text-secondary me-2"></i>
+                                <span data-i18n="topo.customData">Eigene Höhendaten</span>
+                            </h6>
+                            <p class="card-text small text-muted mb-0" data-i18n="topo.customDataDesc">
+                                Höhendaten als GeoTIFF oder XYZ hochladen
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Custom Data Upload Section (initially hidden) -->
+                    <div id="custom-data-upload" style="display: none;">
+                        <hr>
+                        <h6 class="text-secondary mb-3">
+                            <i class="fas fa-file-upload me-2"></i>
+                            <span data-i18n="topo.uploadFile">Datei hochladen</span>
+                        </h6>
+
+                        <div class="mb-3">
+                            <input type="file" class="form-control form-control-sm" id="topo-file-input"
+                                   accept=".tif,.tiff,.xyz,.txt" onchange="handleTopoFileUpload(event)">
+                        </div>
+
+                        <div class="alert alert-info small mb-3">
+                            <p class="mb-1"><strong><i class="fas fa-info-circle me-1"></i> <span data-i18n="common.info">Information</span>:</strong></p>
+                            <ul class="mb-0 ps-3">
+                                <li data-i18n="topo.fileFormats">Unterstützte Formate: GeoTIFF (.tif, .tiff), XYZ (.xyz, .txt)</li>
+                                <li data-i18n="topo.coordinateSystem">Koordinatensystem: EPSG:4326 (WGS84) empfohlen</li>
+                                <li data-i18n="topo.minResolution">Mindestauflösung: 10 Meter Gitterweite</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-warning small" data-i18n="topo.warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Hinweis: PV-Flächen, Betrachtungspunkte und weitere Objekte können nur im Bereich der Höhendaten platziert werden.
+                        </div>
+
+                        <button class="btn btn-secondary btn-sm w-100" onclick="cancelCustomDataUpload()">
+                            <i class="fas fa-times me-1"></i>
+                            <span data-i18n="common.cancel">Abbrechen</span>
+                        </button>
+                    </div>
+
+                    <!-- Current Source Display -->
+                    <div id="current-topo-source" style="display: none;">
+                        <hr>
+                        <div class="alert alert-success small">
+                            <p class="mb-1">
+                                <strong><i class="fas fa-check-circle me-1"></i> <span data-i18n="topo.success">Höhendaten erfolgreich geladen</span></strong>
+                            </p>
+                            <p class="mb-0" id="current-source-info"></p>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm w-100" onclick="changeTopoSource()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            <span data-i18n="topo.changeSource">Quelle ändern</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- PV Areas Panel -->
             <div class="content-panel" id="panel-pv-areas">
                 <h6 class="menu-header" data-i18n="menu.pvAreas">PV-Flächen</h6>
@@ -1393,6 +1483,7 @@
         import { ModuleTypeManager } from '/static/js/ui/module-type-manager.js';
         import { CornerDetailsManager } from '/static/js/ui/corner-details-manager.js';
         import { SearchManager } from '/static/js/ui/search-manager.js';
+        import { TopographySourceManager } from '/static/js/core/topography-source-manager.js';
 
         // Make modules available globally for backward compatibility
         window.GeometryUtils = GeometryUtils;
@@ -1402,7 +1493,8 @@
         window.DrawingManager = DrawingManager;
         window.ModuleTypeManager = ModuleTypeManager;
         window.SearchManager = SearchManager;
-        
+        window.TopographySourceManager = TopographySourceManager;
+
         // Expose individual geometry functions
         window.rotationMatrix = GeometryUtils.rotationMatrix.bind(GeometryUtils);
         window.matrixVectorMultiply = GeometryUtils.matrixVectorMultiply.bind(GeometryUtils);
@@ -1545,6 +1637,9 @@
 
             // Initialize Search Manager
             SearchManager.initialize();
+
+            // Initialize Topography Source Manager
+            TopographySourceManager.initialize();
 
             // Make map globally available for backward compatibility
             window.map = map;
@@ -1730,7 +1825,74 @@
                 UIManager.showMessage('Bitte geben Sie eine Adresse ein.', 'Adresssuche');
             }
         }
-        
+
+        // Topography Source Functions
+        function selectTopoSource(sourceType) {
+            const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
+
+            if (sourceType === 'google') {
+                TopographySourceManager.selectGoogleAPI();
+                showCurrentTopoSource();
+                backToMenu();
+            } else if (sourceType === 'custom') {
+                // Show upload section
+                document.getElementById('custom-data-upload').style.display = 'block';
+            }
+        }
+
+        async function handleTopoFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
+
+            const success = await TopographySourceManager.selectCustomData(file);
+
+            if (success) {
+                showCurrentTopoSource();
+                backToMenu();
+            }
+        }
+
+        function cancelCustomDataUpload() {
+            document.getElementById('custom-data-upload').style.display = 'none';
+            document.getElementById('topo-file-input').value = '';
+        }
+
+        function showCurrentTopoSource() {
+            const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
+            const info = TopographySourceManager.getSourceInfo();
+
+            const infoDiv = document.getElementById('current-source-info');
+
+            if (info.type === 'google') {
+                infoDiv.innerHTML = `<strong>${t('topo.googleApi')}</strong>`;
+            } else if (info.type === 'custom') {
+                const bounds = info.bounds;
+                const resolution = info.resolution;
+                infoDiv.innerHTML = `
+                    <strong>${t('topo.fileSelected', {filename: info.customFile})}</strong><br>
+                    ${t('topo.boundingBox')}: ${bounds.north.toFixed(4)}N, ${bounds.south.toFixed(4)}S, ${bounds.east.toFixed(4)}E, ${bounds.west.toFixed(4)}W<br>
+                    ${t('topo.minResolution')}: ${resolution.toFixed(1)}m
+                `;
+            }
+
+            document.getElementById('current-topo-source').style.display = 'block';
+        }
+
+        function changeTopoSource() {
+            TopographySourceManager.reset();
+            document.getElementById('current-topo-source').style.display = 'none';
+            document.getElementById('custom-data-upload').style.display = 'none';
+            document.getElementById('topo-file-input').value = '';
+        }
+
+        // Make functions globally available
+        window.selectTopoSource = selectTopoSource;
+        window.handleTopoFileUpload = handleTopoFileUpload;
+        window.cancelCustomDataUpload = cancelCustomDataUpload;
+        window.changeTopoSource = changeTopoSource;
+
         // Make initMap available globally for Google Maps callback
         window.initMap = initMap;
     </script>
