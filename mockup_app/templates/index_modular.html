@@ -763,64 +763,33 @@
         }
 
         .topo-option-card {
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            padding: 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
             background: white;
+            margin-bottom: 12px;
         }
 
         .topo-option-card:hover {
             border-color: var(--primary-blue);
             background: #f8fafc;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(66, 116, 165, 0.1);
-        }
-
-        .topo-option-icon {
-            width: 50px;
-            height: 50px;
-            min-width: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary-blue);
-            color: white;
-            border-radius: 8px;
-            font-size: 1.4rem;
-        }
-
-        .topo-icon-custom {
-            background: #64748b;
-        }
-
-        .topo-option-content {
-            flex: 1;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .topo-option-title {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-primary);
-            margin: 0 0 5px 0;
+            margin: 0 0 6px 0;
         }
 
         .topo-option-desc {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
-            margin: 0 0 5px 0;
-            line-height: 1.4;
-        }
-
-        .topo-option-detail {
-            font-size: 0.8rem;
-            color: #94a3b8;
             margin: 0;
-            font-style: italic;
+            line-height: 1.4;
         }
 
         /* Drag & Drop Zone */
@@ -1116,32 +1085,19 @@
                     <!-- Options Container (initially shown) -->
                     <div id="topo-options-container">
                         <!-- Google API Option -->
-                        <div class="topo-option-card mb-3" onclick="selectTopoSource('google')">
-                            <div class="topo-option-icon">
-                                <i class="fas fa-globe"></i>
-                            </div>
-                            <div class="topo-option-content">
-                                <h6 class="topo-option-title" data-i18n="topo.googleApi">Google Elevation API</h6>
-                                <p class="topo-option-desc" data-i18n="topo.googleApiDesc">Automatische Höhenbestimmung weltweit verfügbar</p>
-                                <p class="topo-option-detail" data-i18n="topo.googleApiDetail">Schnell und einfach, keine Datei erforderlich</p>
-                            </div>
+                        <div class="topo-option-card" onclick="selectTopoSource('google')">
+                            <div class="topo-option-title" data-i18n="topo.googleApi">Google Elevation API</div>
+                            <div class="topo-option-desc" data-i18n="topo.googleApiDesc">Automatische Höhenbestimmung weltweit verfügbar</div>
                         </div>
 
                         <!-- Custom Data Option -->
-                        <div class="topo-option-card mb-3" onclick="selectTopoSource('custom')">
-                            <div class="topo-option-icon topo-icon-custom">
-                                <i class="fas fa-layer-group"></i>
-                            </div>
-                            <div class="topo-option-content">
-                                <h6 class="topo-option-title" data-i18n="topo.customData">Eigene präzise Höhendaten</h6>
-                                <p class="topo-option-desc" data-i18n="topo.customDataDesc">Für beste Ergebnisse: DGM1, LiDAR oder eigene Vermessungsdaten</p>
-                                <p class="topo-option-detail" data-i18n="topo.customDataDetail">Upload als GeoTIFF oder XYZ (ASCII)</p>
-                            </div>
+                        <div class="topo-option-card" onclick="selectTopoSource('custom')">
+                            <div class="topo-option-title" data-i18n="topo.customData">Eigene präzise Höhendaten</div>
+                            <div class="topo-option-desc" data-i18n="topo.customDataDesc">Für beste Ergebnisse: DGM1, LiDAR oder eigene Vermessungsdaten</div>
                         </div>
 
                         <!-- Best Practice Tip -->
                         <div class="alert alert-info small mb-0">
-                            <i class="fas fa-lightbulb me-1"></i>
                             <strong>Tipp:</strong> <span data-i18n="topo.bestPractice">Beste Ergebnisse mit DGM1 (1m Raster) oder vergleichbaren hochauflösenden Geländemodellen</span>
                         </div>
                     </div>
