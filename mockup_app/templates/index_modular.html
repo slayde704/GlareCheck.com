@@ -1255,12 +1255,16 @@
             <!-- Coordinate Display -->
             <div class="coordinate-display" id="coordinateDisplay">
                 <div>
-                    <span class="coord-label">Lat:</span>
+                    <span class="coord-label" data-i18n="coords.latitude">Lat</span>:
                     <span class="coord-value" id="latDisplay">-</span>
                 </div>
                 <div>
-                    <span class="coord-label">Lng:</span>
+                    <span class="coord-label" data-i18n="coords.longitude">Lng</span>:
                     <span class="coord-value" id="lngDisplay">-</span>
+                </div>
+                <div id="elevationDisplay" style="display: none;">
+                    <span class="coord-label" data-i18n="coords.elevationShort">Höhe</span>:
+                    <span class="coord-value" id="elevDisplay">-</span> m
                 </div>
             </div>
         </div>
@@ -1646,6 +1650,32 @@
             function clearCoordinates() {
                 document.getElementById('latDisplay').textContent = '-';
                 document.getElementById('lngDisplay').textContent = '-';
+                document.getElementById('elevDisplay').textContent = '-';
+            }
+
+            // Update elevation display based on topography source
+            function updateElevationDisplay(lat, lng) {
+                const topoInfo = TopographySourceManager.getSourceInfo();
+                const elevDisplay = document.getElementById('elevationDisplay');
+                const elevValue = document.getElementById('elevDisplay');
+
+                // Only show elevation if custom data is loaded
+                if (topoInfo.type === 'custom' && topoInfo.isConfigured) {
+                    // Show elevation row
+                    elevDisplay.style.display = 'block';
+
+                    // Get elevation from custom data
+                    const elevation = TopographySourceManager.interpolateElevation(lat, lng);
+
+                    if (elevation !== null && elevation !== undefined) {
+                        elevValue.textContent = elevation.toFixed(1);
+                    } else {
+                        elevValue.textContent = '-';
+                    }
+                } else {
+                    // Hide elevation row for Google API or no source
+                    elevDisplay.style.display = 'none';
+                }
             }
             
             // Track mouse on map
@@ -1694,6 +1724,9 @@
                     if (latLng) {
                         document.getElementById('latDisplay').textContent = latLng.lat().toFixed(6);
                         document.getElementById('lngDisplay').textContent = latLng.lng().toFixed(6);
+
+                        // Update elevation if custom data is loaded
+                        updateElevationDisplay(latLng.lat(), latLng.lng());
                     }
                     
                     // Clean up overlay

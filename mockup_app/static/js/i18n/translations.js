@@ -204,6 +204,12 @@ const translations = {
         'unit.meters': 'm',
         'unit.squareMeters': 'm²',
 
+        // Coordinate Display
+        'coords.latitude': 'Lat',
+        'coords.longitude': 'Lng',
+        'coords.elevation': 'Geländehöhe',
+        'coords.elevationShort': 'Höhe',
+
         // Common
         'common.yes': 'Ja',
         'common.no': 'Nein',
@@ -615,6 +621,12 @@ const translations = {
         'unit.degrees': '°',
         'unit.meters': 'm',
         'unit.squareMeters': 'm²',
+
+        // Coordinate Display
+        'coords.latitude': 'Lat',
+        'coords.longitude': 'Lng',
+        'coords.elevation': 'Ground Level',
+        'coords.elevationShort': 'Elev',
 
         // Common
         'common.yes': 'Yes',
