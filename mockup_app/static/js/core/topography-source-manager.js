@@ -119,23 +119,100 @@ export const TopographySourceManager = {
 
     /**
      * Process GeoTIFF file
-     * Note: Requires geotiff.js library in production
      */
     async processGeoTIFF(file) {
-        // TODO: Implement GeoTIFF parsing using geotiff.js
-        // For now, show placeholder message
-        console.warn('GeoTIFF processing not yet implemented. Use XYZ format for now.');
+        try {
+            // Check if GeoTIFF library is available
+            if (typeof GeoTIFF === 'undefined') {
+                console.error('GeoTIFF library not loaded');
+                const t = (key) => window.i18n ? window.i18n.t(key) : key;
+                UIManager.showNotification(t('topo.geotiffNotSupported'), 'error');
+                return false;
+            }
 
-        // Placeholder - would extract from actual GeoTIFF:
-        // const arrayBuffer = await file.arrayBuffer();
-        // const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
-        // const image = await tiff.getImage();
-        // const bbox = image.getBoundingBox();
-        // const resolution = image.getResolution();
+            // Read file as ArrayBuffer
+            const arrayBuffer = await file.arrayBuffer();
 
-        const t = (key, params) => window.i18n ? window.i18n.t(key, params) : key;
-        UIManager.showNotification(t('topo.geotiffNotSupported'), 'warning');
-        return false;
+            // Parse GeoTIFF
+            const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
+            const image = await tiff.getImage();
+
+            // Get bounding box [minX, minY, maxX, maxY]
+            const bbox = image.getBoundingBox();
+
+            // Get resolution [resX, resY]
+            const resolution = image.getResolution();
+
+            // Read elevation data
+            const rasterData = await image.readRasters();
+            const width = image.getWidth();
+            const height = image.getHeight();
+
+            // Extract elevation values (assuming single band DEM)
+            const elevations = rasterData[0]; // First band
+
+            // Convert to point grid for storage
+            const points = [];
+            const xStep = (bbox[2] - bbox[0]) / width;
+            const yStep = (bbox[3] - bbox[1]) / height;
+
+            // Sample the grid (don't store every pixel, too much memory)
+            // Sample every Nth pixel based on resolution
+            const sampleRate = Math.max(1, Math.floor(Math.min(resolution[0], resolution[1]) / 5));
+
+            for (let row = 0; row < height; row += sampleRate) {
+                for (let col = 0; col < width; col += sampleRate) {
+                    const lng = bbox[0] + col * xStep;
+                    const lat = bbox[3] - row * yStep; // Y axis is inverted in images
+                    const elev = elevations[row * width + col];
+
+                    // Skip NoData values (often -9999 or NaN)
+                    if (elev !== null && !isNaN(elev) && elev > -9000) {
+                        points.push({ lng, lat, elev });
+                    }
+                }
+            }
+
+            if (points.length === 0) {
+                console.error('No valid elevation data found in GeoTIFF');
+                const t = (key) => window.i18n ? window.i18n.t(key) : key;
+                UIManager.showNotification(t('topo.noValidData'), 'error');
+                return false;
+            }
+
+            // Calculate average resolution in meters
+            // Convert degrees to meters (approximate at mid-latitude)
+            const midLat = (bbox[1] + bbox[3]) / 2;
+            const metersPerDegree = 111320 * Math.cos(midLat * Math.PI / 180);
+            const avgResolution = Math.abs(resolution[0]) * metersPerDegree;
+
+            // Store data
+            this.customDataBounds = {
+                north: bbox[3],
+                south: bbox[1],
+                east: bbox[2],
+                west: bbox[0]
+            };
+
+            this.customDataResolution = avgResolution;
+            this.customDataGrid = points;
+
+            console.log('GeoTIFF processed:', {
+                points: points.length,
+                bounds: this.customDataBounds,
+                resolution: `${avgResolution.toFixed(2)}m`,
+                dimensions: `${width}x${height}`,
+                sampled: `every ${sampleRate} pixels`
+            });
+
+            return true;
+
+        } catch (error) {
+            console.error('Error processing GeoTIFF:', error);
+            const t = (key) => window.i18n ? window.i18n.t(key) : key;
+            UIManager.showNotification(t('topo.error') + ': ' + error.message, 'error');
+            return false;
+        }
     },
 
     /**
