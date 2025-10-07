@@ -1659,15 +1659,20 @@
                 const elevDisplay = document.getElementById('elevationDisplay');
                 const elevValue = document.getElementById('elevDisplay');
 
+                if (!elevDisplay || !elevValue) return;
+
+                // Debug: Log the source type (temporary - remove after testing)
+                console.log('updateElevationDisplay - topoInfo:', topoInfo);
+
                 // Only show elevation if custom data is loaded
-                if (topoInfo.type === 'custom' && topoInfo.isConfigured) {
+                if (topoInfo && topoInfo.type === 'custom' && topoInfo.isConfigured) {
                     // Show elevation row
                     elevDisplay.style.display = 'block';
 
                     // Get elevation from custom data
                     const elevation = TopographySourceManager.interpolateElevation(lat, lng);
 
-                    if (elevation !== null && elevation !== undefined) {
+                    if (elevation !== null && elevation !== undefined && elevation !== 0) {
                         elevValue.textContent = elevation.toFixed(1);
                     } else {
                         elevValue.textContent = '-';

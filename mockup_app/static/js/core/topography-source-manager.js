@@ -45,7 +45,10 @@ export const TopographySourceManager = {
             // Ensure elevation display is hidden on first load
             const elevDisplay = document.getElementById('elevationDisplay');
             if (elevDisplay) {
+                console.log('Hiding elevation display on first load');
                 elevDisplay.style.display = 'none';
+            } else {
+                console.warn('elevationDisplay element not found on initialize');
             }
         }
     },
