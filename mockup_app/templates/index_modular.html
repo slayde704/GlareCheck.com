@@ -755,6 +755,104 @@
             filter: invert(1) grayscale(100%) brightness(200%);
         }
         
+        /* Topography Panel Styles */
+        .topo-panel-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        .topo-option-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .topo-option-card:hover {
+            border-color: var(--primary-blue);
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 116, 165, 0.15);
+        }
+
+        .topo-option-icon {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #5a8bc4 100%);
+            color: white;
+            border-radius: 10px;
+            font-size: 1.5rem;
+        }
+
+        .topo-icon-custom {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .topo-option-content {
+            flex: 1;
+        }
+
+        .topo-option-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+        }
+
+        .topo-option-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0 0 5px 0;
+            line-height: 1.4;
+        }
+
+        .topo-option-detail {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin: 0;
+            font-style: italic;
+        }
+
+        /* Drag & Drop Zone */
+        .topo-drop-zone {
+            border: 3px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .topo-drop-zone:hover {
+            border-color: var(--primary-blue);
+            background: #eff6ff;
+        }
+
+        .topo-drop-zone.drag-over {
+            border-color: var(--primary-blue);
+            background: #dbeafe;
+            border-style: solid;
+        }
+
+        .topo-drop-zone i {
+            transition: transform 0.2s ease;
+        }
+
+        .topo-drop-zone:hover i {
+            transform: translateY(-5px);
+        }
+
         /* Corner Details Panel */
         .corner-details-panel {
             position: fixed;
@@ -1007,77 +1105,92 @@
                     <span class="button-text"><span data-i18n="menu.backToMain">Zurück zum Hauptmenü</span></span>
                 </button>
 
-                <div class="p-3">
-                    <!-- Google API Option -->
-                    <div class="card mb-3 border-primary" style="cursor: pointer;" onclick="selectTopoSource('google')">
-                        <div class="card-body">
-                            <h6 class="card-title">
-                                <i class="fas fa-globe text-primary me-2"></i>
-                                <span data-i18n="topo.googleApi">Google Elevation API</span>
-                                <span class="badge bg-success ms-2" data-i18n="common.recommended" style="font-size: 0.7rem;">Empfohlen</span>
-                            </h6>
-                            <p class="card-text small text-muted mb-0" data-i18n="topo.googleApiDesc">
-                                Automatische Höhenbestimmung über Google (empfohlen)
-                            </p>
-                        </div>
+                <div class="topo-panel-content">
+                    <!-- Introduction Text -->
+                    <div class="alert alert-light border mb-3">
+                        <p class="mb-0 small" data-i18n="topo.intro">
+                            Wählen Sie eine Quelle für die Geländehöhendaten. Falls Sie keine eigenen Höhendaten haben, verwenden Sie einfach Google.
+                        </p>
                     </div>
 
-                    <!-- Custom Data Option -->
-                    <div class="card mb-3" style="cursor: pointer;" onclick="selectTopoSource('custom')">
-                        <div class="card-body">
-                            <h6 class="card-title">
-                                <i class="fas fa-upload text-secondary me-2"></i>
-                                <span data-i18n="topo.customData">Eigene Höhendaten</span>
-                            </h6>
-                            <p class="card-text small text-muted mb-0" data-i18n="topo.customDataDesc">
-                                Höhendaten als GeoTIFF oder XYZ hochladen
-                            </p>
+                    <!-- Options Container (initially shown) -->
+                    <div id="topo-options-container">
+                        <!-- Google API Option -->
+                        <div class="topo-option-card mb-3" onclick="selectTopoSource('google')">
+                            <div class="topo-option-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="topo-option-content">
+                                <h6 class="topo-option-title" data-i18n="topo.googleApi">Google Elevation API</h6>
+                                <p class="topo-option-desc" data-i18n="topo.googleApiDesc">Automatische Höhenbestimmung weltweit verfügbar</p>
+                                <p class="topo-option-detail" data-i18n="topo.googleApiDetail">Schnell und einfach, keine Datei erforderlich</p>
+                            </div>
+                        </div>
+
+                        <!-- Custom Data Option -->
+                        <div class="topo-option-card mb-3" onclick="selectTopoSource('custom')">
+                            <div class="topo-option-icon topo-icon-custom">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="topo-option-content">
+                                <h6 class="topo-option-title" data-i18n="topo.customData">Eigene präzise Höhendaten</h6>
+                                <p class="topo-option-desc" data-i18n="topo.customDataDesc">Für beste Ergebnisse: DGM1, LiDAR oder eigene Vermessungsdaten</p>
+                                <p class="topo-option-detail" data-i18n="topo.customDataDetail">Upload als GeoTIFF oder XYZ (ASCII)</p>
+                            </div>
+                        </div>
+
+                        <!-- Best Practice Tip -->
+                        <div class="alert alert-info small mb-0">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            <strong>Tipp:</strong> <span data-i18n="topo.bestPractice">Beste Ergebnisse mit DGM1 (1m Raster) oder vergleichbaren hochauflösenden Geländemodellen</span>
                         </div>
                     </div>
 
                     <!-- Custom Data Upload Section (initially hidden) -->
                     <div id="custom-data-upload" style="display: none;">
-                        <hr>
                         <h6 class="text-secondary mb-3">
                             <i class="fas fa-file-upload me-2"></i>
                             <span data-i18n="topo.uploadFile">Datei hochladen</span>
                         </h6>
 
-                        <div class="mb-3">
-                            <input type="file" class="form-control form-control-sm" id="topo-file-input"
-                                   accept=".tif,.tiff,.xyz,.txt" onchange="handleTopoFileUpload(event)">
+                        <!-- Drag & Drop Area -->
+                        <div id="topo-drop-zone" class="topo-drop-zone">
+                            <input type="file" id="topo-file-input" accept=".tif,.tiff,.xyz,.txt" style="display: none;" onchange="handleTopoFileUpload(event)">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                            <p class="mb-2" data-i18n="topo.dragDrop">Datei hier ablegen oder klicken zum Auswählen</p>
+                            <p class="small text-muted mb-0">GeoTIFF, XYZ</p>
                         </div>
 
-                        <div class="alert alert-info small mb-3">
-                            <p class="mb-1"><strong><i class="fas fa-info-circle me-1"></i> <span data-i18n="common.info">Information</span>:</strong></p>
-                            <ul class="mb-0 ps-3">
+                        <!-- File Requirements -->
+                        <div class="mt-3">
+                            <p class="small mb-2"><strong><i class="fas fa-info-circle me-1"></i> Anforderungen:</strong></p>
+                            <ul class="small mb-2 ps-3">
                                 <li data-i18n="topo.fileFormats">Unterstützte Formate: GeoTIFF (.tif, .tiff), XYZ (.xyz, .txt)</li>
                                 <li data-i18n="topo.coordinateSystem">Koordinatensystem: EPSG:4326 (WGS84) empfohlen</li>
-                                <li data-i18n="topo.minResolution">Mindestauflösung: 10 Meter Gitterweite</li>
+                                <li data-i18n="topo.minResolution">Unterstützte Auflösung: 1 bis 50 Meter Gitterweite</li>
                             </ul>
                         </div>
 
-                        <div class="alert alert-warning small" data-i18n="topo.warning">
+                        <div class="alert alert-warning small mb-3">
                             <i class="fas fa-exclamation-triangle me-1"></i>
-                            Hinweis: PV-Flächen, Betrachtungspunkte und weitere Objekte können nur im Bereich der Höhendaten platziert werden.
+                            <span data-i18n="topo.warning">Hinweis: Objekte können nur im Bereich der hochgeladenen Höhendaten platziert werden.</span>
                         </div>
 
                         <button class="btn btn-secondary btn-sm w-100" onclick="cancelCustomDataUpload()">
-                            <i class="fas fa-times me-1"></i>
-                            <span data-i18n="common.cancel">Abbrechen</span>
+                            <i class="fas fa-arrow-left me-1"></i>
+                            <span data-i18n="common.cancel">Zurück</span>
                         </button>
                     </div>
 
                     <!-- Current Source Display -->
                     <div id="current-topo-source" style="display: none;">
-                        <hr>
-                        <div class="alert alert-success small">
-                            <p class="mb-1">
+                        <div class="alert alert-success">
+                            <p class="mb-2">
                                 <strong><i class="fas fa-check-circle me-1"></i> <span data-i18n="topo.success">Höhendaten erfolgreich geladen</span></strong>
                             </p>
-                            <p class="mb-0" id="current-source-info"></p>
+                            <div id="current-source-info" class="small"></div>
                         </div>
-                        <button class="btn btn-outline-secondary btn-sm w-100" onclick="changeTopoSource()">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="changeTopoSource()">
                             <i class="fas fa-sync-alt me-1"></i>
                             <span data-i18n="topo.changeSource">Quelle ändern</span>
                         </button>
@@ -1835,9 +1948,59 @@
                 showCurrentTopoSource();
                 backToMenu();
             } else if (sourceType === 'custom') {
-                // Show upload section
+                // Hide options, show upload section
+                document.getElementById('topo-options-container').style.display = 'none';
                 document.getElementById('custom-data-upload').style.display = 'block';
+                initializeDropZone();
             }
+        }
+
+        // Initialize drag & drop zone
+        function initializeDropZone() {
+            const dropZone = document.getElementById('topo-drop-zone');
+            const fileInput = document.getElementById('topo-file-input');
+
+            if (!dropZone || !fileInput) return;
+
+            // Click to select file
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Highlight drop zone when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('drag-over');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('drag-over');
+                }, false);
+            });
+
+            // Handle dropped files
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleTopoFileUpload({ target: { files: files } });
+                }
+            }, false);
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
 
         async function handleTopoFileUpload(event) {
@@ -1856,6 +2019,7 @@
 
         function cancelCustomDataUpload() {
             document.getElementById('custom-data-upload').style.display = 'none';
+            document.getElementById('topo-options-container').style.display = 'block';
             document.getElementById('topo-file-input').value = '';
         }
 
@@ -1872,11 +2036,14 @@
                 const resolution = info.resolution;
                 infoDiv.innerHTML = `
                     <strong>${t('topo.fileSelected', {filename: info.customFile})}</strong><br>
-                    ${t('topo.boundingBox')}: ${bounds.north.toFixed(4)}N, ${bounds.south.toFixed(4)}S, ${bounds.east.toFixed(4)}E, ${bounds.west.toFixed(4)}W<br>
-                    ${t('topo.minResolution')}: ${resolution.toFixed(1)}m
+                    ${t('topo.boundingBox')}: ${bounds.north.toFixed(4)}°N, ${bounds.south.toFixed(4)}°S, ${bounds.east.toFixed(4)}°E, ${bounds.west.toFixed(4)}°W<br>
+                    ${t('topo.resolution')}: ${resolution.toFixed(1)}m
                 `;
             }
 
+            // Hide options and upload sections, show current source
+            document.getElementById('topo-options-container').style.display = 'none';
+            document.getElementById('custom-data-upload').style.display = 'none';
             document.getElementById('current-topo-source').style.display = 'block';
         }
 
@@ -1884,6 +2051,7 @@
             TopographySourceManager.reset();
             document.getElementById('current-topo-source').style.display = 'none';
             document.getElementById('custom-data-upload').style.display = 'none';
+            document.getElementById('topo-options-container').style.display = 'block';
             document.getElementById('topo-file-input').value = '';
         }
 

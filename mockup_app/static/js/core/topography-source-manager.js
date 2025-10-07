@@ -89,8 +89,8 @@ export const TopographySourceManager = {
                 return false;
             }
 
-            // Validate resolution (minimum 10m)
-            if (this.customDataResolution < 10) {
+            // Validate resolution (1m to 50m)
+            if (this.customDataResolution < 1 || this.customDataResolution > 50) {
                 UIManager.showNotification(t('topo.invalidResolution'), 'error');
                 return false;
             }
@@ -341,7 +341,14 @@ export const TopographySourceManager = {
         menuItems.forEach(item => {
             item.classList.add('disabled');
             item.style.opacity = '0.5';
-            item.style.pointerEvents = 'none';
+            item.style.cursor = 'not-allowed';
+
+            // Add click handler to show notification
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                UIManager.showNotification(t('topo.requiredMessage'), 'warning');
+            });
         });
 
         console.log('Menu items locked - awaiting topography source selection');
@@ -355,7 +362,11 @@ export const TopographySourceManager = {
         menuItems.forEach(item => {
             item.classList.remove('disabled');
             item.style.opacity = '1';
-            item.style.pointerEvents = 'auto';
+            item.style.cursor = 'pointer';
+
+            // Remove all existing click handlers by cloning (removes all listeners)
+            const newItem = item.cloneNode(true);
+            item.parentNode.replaceChild(newItem, item);
         });
 
         console.log('Menu items unlocked');
