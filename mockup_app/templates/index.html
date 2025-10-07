@@ -15,273 +15,18 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <!-- Custom Styles -->
+    <link href="/static/css/styles.css" rel="stylesheet">
+
     <style>
-        :root {
-            --primary-blue: #4274a5;
-            --accent-yellow: #ffc107;
-            --text-primary: #333333;
-            --text-secondary: #666666;
-            --background-light: #f8fafc;
-            --border-color: #e2e8f0;
-            --header-height: 60px;
-            --sidebar-width: 380px;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--background-light);
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-        
-        /* Header */
-        .header {
-            height: var(--header-height);
-            background: white;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .header h1 {
-            font-size: 1.5rem;
-            margin: 0;
-            color: var(--primary-blue);
-            font-weight: 600;
-        }
-        
-        /* Layout Container */
-        .main-container {
-            display: flex;
-            height: calc(100vh - var(--header-height));
-            margin-top: var(--header-height);
-        }
-        
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: white;
-            border-right: 1px solid var(--border-color);
-            overflow-y: auto;
-            flex-shrink: 0;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Map Container */
-        .map-container {
-            flex: 1;
-            position: relative;
-        }
-        
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-        
-        
-        /* Menu Styles */
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            color: var(--text-primary);
-        }
-        
-        .menu-item:hover {
-            background-color: var(--background-light);
-        }
-        
-        .menu-item.active {
-            background-color: #e3f2fd;
-            color: var(--primary-blue);
-            font-weight: 500;
-        }
-        
-        .menu-item i {
-            width: 20px;
-            margin-right: 12px;
-            font-size: 1.1rem;
-        }
-        
-        .menu-section {
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .menu-section.collapsed .menu-item:not(.active) {
-            display: none;
-        }
-        
-        .back-button {
-            display: none;
-            padding: 8px 16px;
-            margin: 10px 20px;
-            background-color: #f8f9fa;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .back-button:hover {
-            background-color: #e9ecef;
-        }
-        
-        .menu-section.collapsed .back-button {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .current-function {
-            display: none;
-            padding: 12px 20px;
-            background-color: var(--accent-yellow);
-            color: var(--text-primary);
-            font-weight: 600;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .menu-section.collapsed .current-function {
-            display: block;
-        }
-        
-        .menu-section h6 {
-            padding: 0 20px;
-            margin-bottom: 10px;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* Search Box */
-        .search-box {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-        }
-        
-        /* Content Panels */
-        .content-panel {
-            display: none;
-            padding: 20px;
-            flex: 1;
-            overflow-y: auto;
-        }
-        
-        .content-panel.active {
-            display: block;
-            height: 100%;
-        }
-        
-        /* Lists */
-        .element-list {
-            /* No height restriction - use full available space */
-            overflow-y: auto;
-        }
-        
-        /* Small form checks */
-        .form-check-sm .form-check-input {
-            width: 0.875rem;
-            height: 0.875rem;
-            margin-top: 0.125rem;
-        }
-        
-        .form-check-sm .form-check-label {
-            font-size: 0.75rem;
-        }
-        
-        .element-item {
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .element-item:hover {
-            background-color: var(--background-light);
-        }
-        
-        .pv-area-item .element-item {
-            transition: background-color 0.2s;
-        }
-        
-        .pv-area-item .element-item:hover {
-            background-color: #f0f4f8;
-        }
-        
-        /* Buttons */
-        .btn-sm {
-            padding: 4px 12px;
-            font-size: 0.875rem;
-        }
-        
-        .btn-delete {
-            color: #dc3545;
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .btn-delete:hover {
-            color: #a02622;
-        }
-        
-        /* Drag and Drop styles */
-        .pv-area-item {
-            transition: transform 0.2s;
-        }
-        
-        .pv-area-item.dragging {
-            opacity: 0.5;
-        }
-        
-        .pv-area-item.drag-over-top {
-            border-top: 3px solid #4274a5;
-        }
-        
-        .pv-area-item.drag-over-bottom {
-            border-bottom: 3px solid #4274a5;
-        }
+        /* Temporary overrides - these will be moved to styles.css */
     </style>
 </head>
 <body>
     <!-- Header -->
-    <header class="header" style="display: flex; align-items: center; padding: 10px 20px;">
+    <header class="header">
         <img src="/logos/GlearCheck_Logo_5.png" alt="GlareCheck Logo" style="height: 40px; margin-right: 15px;">
-        <h1 style="margin: 0;">GlareCheck.com</h1>
+        <h1>GlareCheck.com</h1>
     </header>
     
     <!-- Main Container -->
@@ -468,19 +213,142 @@
             
         </div>
     </div>
-    
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Define critical functions early -->
     <script>
+        console.log('EARLY SCRIPT: Defining window.attachTopographyListeners');
+        window.attachTopographyListeners = function(pvArea) {
+            console.log('attachTopographyListeners stub called for:', pvArea?.id);
+            // Will be properly implemented later
+            if (window._attachTopographyListenersReal) {
+                window._attachTopographyListenersReal(pvArea);
+            } else {
+                console.log('Real implementation not yet available, queuing...');
+                window._pendingTopographyListeners = window._pendingTopographyListeners || [];
+                window._pendingTopographyListeners.push(pvArea);
+            }
+        };
+        console.log('window.attachTopographyListeners is now:', typeof window.attachTopographyListeners);
+    </script>
+
+    <script>
+        console.log('Script starting...');
+
+        // Re-check if function exists
+        console.log('At main script start, window.attachTopographyListeners is:', typeof window.attachTopographyListeners);
+
+        // Define topography functions IMMEDIATELY so they're available for drawing-manager
+        window._attachTopographyListenersOld = function(pvArea) {
+            console.log('attachTopographyListeners called for:', pvArea?.id, pvArea?.type);
+            // Will be implemented later when topographyListeners is available
+            if (window.topographyListenersImpl) {
+                window.topographyListenersImpl(pvArea);
+            }
+        };
+
+        window.markTopographyOutdated = function(pvId) {
+            const pv = window.pvAreas?.find(p => p.id === pvId);
+            if (pv && pv.topographyMode && pv.topographyMode !== 'none' && pv.topographyMode !== 'plane') {
+                pv.topographyOutdated = true;
+                console.log('Marked topography as outdated for PV:', pvId);
+                if (window.updateUI) window.updateUI();
+            }
+        };
+
         let map;
         let drawingManager;
         let currentMode = 'view';
         let pvAreas = [];
+        window.pvAreas = pvAreas; // Make it globally accessible
         let observationPoints = [];
         let tempPolyline = null;
         let tempPolygon = null;
         let rectanglePoints = [];
         let roofParallelEditor = null;
+
+        // Topography tracking for field PV areas
+        let topographyListeners = {};
+
+        // Now provide the full implementation
+        window.topographyListenersImpl = function(pvArea) {
+            console.log('Full topographyListeners implementation for:', pvArea?.id, pvArea?.type);
+            if (!pvArea || !pvArea.polygon || (pvArea.type !== 'field' && pvArea.type !== 'ground')) {
+                console.log('Skipping - not a field/ground type or no polygon');
+                return;
+            }
+
+                // Remove existing listeners if any
+                if (topographyListeners[pvArea.id]) {
+                    topographyListeners[pvArea.id].forEach(listener => {
+                        google.maps.event.removeListener(listener);
+                    });
+                    delete topographyListeners[pvArea.id];
+                }
+
+                const listeners = [];
+                const path = pvArea.polygon.getPath();
+
+                // Listen for vertex changes
+                listeners.push(google.maps.event.addListener(path, 'set_at', () => {
+                    console.log('Embedded listener: vertex changed for', pvArea.id);
+                    window.markTopographyOutdated(pvArea.id);
+                }));
+
+                // Listen for vertex additions
+                listeners.push(google.maps.event.addListener(path, 'insert_at', () => {
+                    console.log('Embedded listener: vertex added for', pvArea.id);
+                    window.markTopographyOutdated(pvArea.id);
+                }));
+
+                // Listen for vertex removals
+                listeners.push(google.maps.event.addListener(path, 'remove_at', () => {
+                    console.log('Embedded listener: vertex removed for', pvArea.id);
+                    window.markTopographyOutdated(pvArea.id);
+                }));
+
+                // Listen for polygon drag
+                listeners.push(google.maps.event.addListener(pvArea.polygon, 'dragend', () => {
+                    console.log('Embedded listener: polygon dragged for', pvArea.id);
+                    window.markTopographyOutdated(pvArea.id);
+                }));
+
+                topographyListeners[pvArea.id] = listeners;
+                console.log('Embedded topography listeners attached for PV:', pvArea.id);
+        };
+
+        // Store the real implementation
+        window._attachTopographyListenersReal = window.topographyListenersImpl;
+
+        // Process any pending listeners
+        if (window._pendingTopographyListeners && window._pendingTopographyListeners.length > 0) {
+            console.log('Processing pending topography listeners:', window._pendingTopographyListeners.length);
+            window._pendingTopographyListeners.forEach(pvArea => {
+                window.topographyListenersImpl(pvArea);
+            });
+            window._pendingTopographyListeners = [];
+        }
+
+        // Mark topography as outdated (already defined earlier but redefining with full implementation)
+        window.markTopographyOutdated = function(pvId) {
+                const pv = pvAreas.find(p => p.id === pvId);
+                if (pv && pv.topographyMode && pv.topographyMode !== 'none' && pv.topographyMode !== 'plane') {
+                    pv.topographyOutdated = true;
+                    console.log('Marked topography as outdated for PV:', pvId);
+                    updateUI();
+                }
+            };
+
+            console.log('Topography functions registered globally');
+
+            // Test if functions are really available
+            console.log('Testing: window.attachTopographyListeners is', typeof window.attachTopographyListeners);
+            console.log('Testing: window.markTopographyOutdated is', typeof window.markTopographyOutdated);
+        } catch (error) {
+            console.error('Error registering topography functions:', error);
+        }
         
         // Module types with reflection profiles
         let moduleTypes = [
@@ -532,7 +400,80 @@
             const bootstrapModal = new bootstrap.Modal(modal);
             bootstrapModal.show();
         }
-        
+
+        // Open topography management
+        window.openTopographyManager = function(pvId) {
+            console.log('openTopographyManager called for:', pvId);
+            const pv = pvAreas.find(p => p.id === pvId);
+            if (!pv) {
+                console.error('PV area not found:', pvId);
+                return;
+            }
+
+            // Sync to StateManager first if available
+            if (window.StateManager) {
+                // Ensure PV is in StateManager
+                const statePV = window.StateManager.getPVArea(pvId);
+                if (!statePV) {
+                    console.log('Adding PV to StateManager:', pvId);
+                    window.StateManager.addPVArea(pv);
+                } else {
+                    // Update with current data
+                    window.StateManager.updatePVArea(pvId, pv);
+                }
+            }
+
+            // If CornerDetailsManager is available, use it
+            if (window.CornerDetailsManager && window.CornerDetailsManager.open) {
+                console.log('Opening CornerDetailsManager for:', pvId);
+
+                // Subscribe to state changes to update when dialog closes
+                const unsubscribe = window.StateManager.subscribe((type, data) => {
+                    if (type === 'pv-area-updated' && data.id === pvId) {
+                        // Update local pvArea with new data
+                        const updatedPV = window.StateManager.getPVArea(pvId);
+                        const localPV = pvAreas.find(p => p.id === pvId);
+                        if (localPV && updatedPV) {
+                            Object.assign(localPV, {
+                                topographyMode: updatedPV.topographyMode,
+                                topographyOutdated: updatedPV.topographyOutdated,
+                                supportPoints: updatedPV.supportPoints
+                            });
+                            console.log('Updated local PV with topography data:', localPV.topographyMode);
+                            updateUI();
+                        }
+                    }
+                });
+
+                window.CornerDetailsManager.open(pvId);
+            } else {
+                console.log('CornerDetailsManager not available, using simple fallback');
+                // Simple fallback - just set a basic mode
+                if (!pv.topographyMode || pv.topographyMode === 'none') {
+                    // Show options
+                    const mode = prompt('Topografie-Modus wählen:\n1 = Best-Fit-Ebene\n2 = 100m Raster\n3 = Manuell', '1');
+                    if (mode === '1') {
+                        pv.topographyMode = 'plane';
+                        pv.topographyOutdated = false;
+                    } else if (mode === '2') {
+                        pv.topographyMode = 'grid';
+                        pv.topographyOutdated = false;
+                    } else if (mode === '3') {
+                        pv.topographyMode = 'manual';
+                        pv.topographyOutdated = false;
+                    }
+                    updateUI();
+                } else if (pv.topographyOutdated) {
+                    if (confirm('Fläche wurde verändert. Topografie als korrekt bestätigen?')) {
+                        pv.topographyOutdated = false;
+                        updateUI();
+                    }
+                } else {
+                    alert(`Topografie-Modus: ${pv.topographyMode}\nStatus: OK`);
+                }
+            }
+        }
+
         // Make initMap globally accessible
         function initMap() {
             // Default center (Munich)
@@ -870,10 +811,16 @@
             pvArea.isNew = true;
             
             pvAreas.push(pvArea);
-            
+
             // Add corner markers immediately after creating the PV area
             console.log('Creating corner markers for type:', pvArea.type);
             updateCornerMarkers(pvArea);
+
+            // Attach topography listeners for field/ground PV areas
+            if (pvArea.type === 'field' || pvArea.type === 'ground') {
+                console.log('Attaching embedded topography listeners for field PV:', pvArea.id);
+                attachTopographyListeners(pvArea);
+            }
             
             // Create PV label - TEMPORARILY DISABLED
             // createPVLabel(pvArea);
@@ -1223,7 +1170,22 @@
         
         function updateUI() {
             console.log('updateUI called, total PV areas:', pvAreas.length);
-            
+
+            // If PVListRenderer is available, use it
+            if (window.PVListRenderer && window.PVListRenderer.render) {
+                console.log('Using PVListRenderer for rendering');
+                // Sync pvAreas to StateManager first
+                if (window.StateManager) {
+                    window.StateManager.clearAllPVAreas();
+                    pvAreas.forEach(pv => window.StateManager.addPVArea(pv));
+                }
+                window.PVListRenderer.render();
+                return;
+            }
+
+            // Fallback to original rendering if modules not loaded yet
+            console.log('PVListRenderer not available, using fallback rendering');
+
             // Save current expanded states before updating
             const expandedStates = {};
             document.querySelectorAll('.pv-area-item').forEach(item => {
@@ -1233,7 +1195,7 @@
                     expandedStates[pvId] = true;
                 }
             });
-            
+
             // Update PV Areas list
             const pvList = document.getElementById('pv-list');
             if (!pvList) {
@@ -1568,13 +1530,34 @@
                                                onchange="updatePVParameter('${pv.id}', 'crossTilt', this.value)">
                                     </div>
                                     <div class="mb-3">
-                                        <button class="btn btn-outline-primary btn-sm w-100" 
+                                        <button class="btn btn-outline-primary btn-sm w-100"
                                                 onclick="console.log('Button clicked for:', '${pv.id}'); console.log('Panel exists:', !!document.getElementById('cornerHeightsPanel')); console.log('All IDs:', Array.from(document.querySelectorAll('[id]')).map(el => el.id).filter(id => id.includes('corner'))); openCornerHeightsDialog('${pv.id}')"
                                                 style="font-size: 0.875rem;">
                                             <i class="fas fa-ruler-vertical me-2"></i>
                                             Eckpunkt-Höhen verwalten
                                         </button>
-                                    </div>`}
+                                    </div>
+                                    ${(pv.type === 'field' || pv.type === 'ground') ? `
+                                    <div class="mb-3">
+                                        ${pv.topographyOutdated && pv.topographyMode !== 'plane' ? `
+                                        <div class="text-danger small mb-2" style="font-size: 0.75rem;">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            Fläche wurde verändert - Topografie prüfen
+                                        </div>
+                                        ` : ''}
+                                        <button class="btn ${!pv.topographyMode || pv.topographyMode === 'none' ? 'btn-warning' :
+                                                        pv.topographyOutdated && pv.topographyMode !== 'plane' ? 'btn-outline-danger' :
+                                                        'btn-outline-primary'} btn-sm w-100"
+                                                onclick="openTopographyManager('${pv.id}')"
+                                                style="font-size: 0.875rem;">
+                                            <i class="bi bi-geo-alt me-2"></i>
+                                            ${!pv.topographyMode || pv.topographyMode === 'none' ? 'Topografie definieren!' :
+                                              pv.topographyOutdated && pv.topographyMode !== 'plane' ? 'Topografie prüfen' :
+                                              'Topografie verwalten'}
+                                        </button>
+                                    </div>
+                                    ` : ''}
+                                    `}
                                     <div id="effective-values-${pv.id}" class="alert alert-info p-2 mb-2" style="display: none; font-size: 0.875rem;">
                                         <div class="row">
                                             <div class="col-6">
@@ -6432,5 +6415,111 @@
             </div>
         </div>
     </div>
+
+    <!-- Load modular JavaScript files -->
+    <script type="module">
+        import { StateManager } from '/static/js/state/state-manager.js';
+        import { PVListRenderer } from '/static/js/ui/pv-list-renderer.js';
+        import { CornerDetailsManager } from '/static/js/ui/corner-details-manager.js';
+
+        // Make available globally
+        window.StateManager = StateManager;
+        window.PVListRenderer = PVListRenderer;
+        window.CornerDetailsManager = CornerDetailsManager;
+
+        // Initialize after map and page are ready
+        function initializeModules() {
+            console.log('Initializing modular components...');
+
+            // Initialize StateManager first
+            StateManager.initialize().then(() => {
+                console.log('StateManager initialized');
+
+                // Sync existing pvAreas to StateManager
+                if (window.pvAreas && window.pvAreas.length > 0) {
+                    console.log('Syncing existing PV areas to StateManager:', window.pvAreas.length);
+                    window.pvAreas.forEach(pv => {
+                        StateManager.addPVArea(pv);
+                    });
+                }
+
+                // Initialize PVListRenderer
+                PVListRenderer.initialize();
+                console.log('PVListRenderer initialized');
+
+                // Initialize CornerDetailsManager (includes global listeners)
+                CornerDetailsManager.initialize();
+                console.log('CornerDetailsManager initialized with global listeners');
+
+                // Subscribe to StateManager changes to sync back to pvAreas
+                StateManager.subscribe((type, data) => {
+                    if (type === 'pv-area-updated' && data && data.id) {
+                        const localPV = window.pvAreas.find(p => p.id === data.id);
+                        if (localPV) {
+                            // Update local pvArea with StateManager data
+                            Object.assign(localPV, {
+                                topographyMode: data.topographyMode,
+                                topographyOutdated: data.topographyOutdated,
+                                supportPoints: data.supportPoints,
+                                gridActive: data.gridActive,
+                                useBestFitPlane: data.useBestFitPlane
+                            });
+                            console.log('Synced StateManager update to pvAreas:', data.id, 'topographyMode:', data.topographyMode);
+                        }
+                    }
+                });
+
+                // Create a proxy for pvAreas to sync changes
+                const originalPvAreas = window.pvAreas || [];
+                window.pvAreas = new Proxy(originalPvAreas, {
+                    set: function(target, property, value) {
+                        target[property] = value;
+                        if (property === 'length') return true;
+
+                        // Sync to StateManager
+                        if (!isNaN(property)) {
+                            const pvId = value?.id;
+                            if (pvId) {
+                                const existing = StateManager.getPVArea(pvId);
+                                if (existing) {
+                                    StateManager.updatePVArea(pvId, value);
+                                } else {
+                                    StateManager.addPVArea(value);
+                                }
+                            }
+                        }
+                        return true;
+                    },
+                    deleteProperty: function(target, property) {
+                        const pv = target[property];
+                        if (pv?.id) {
+                            StateManager.removePVArea(pv.id);
+                        }
+                        delete target[property];
+                        return true;
+                    }
+                });
+
+                // Trigger initial UI update
+                if (window.updateUI) {
+                    console.log('Triggering UI update after module init');
+                    window.updateUI();
+                }
+
+                console.log('Modular components initialized and synced');
+            }).catch(error => {
+                console.error('Failed to initialize modules:', error);
+            });
+        }
+
+        // Wait for both DOM and map to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initializeModules, 1000); // Wait a bit for map to initialize
+            });
+        } else {
+            setTimeout(initializeModules, 1000); // Wait a bit for map to initialize
+        }
+    </script>
 </body>
 </html>

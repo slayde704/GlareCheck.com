@@ -11,11 +11,13 @@ export const CornerDetailsManager = {
     updateInterval: null,
     editingCorner: null,
     initialized: false,
+    globalFieldListeners: {},  // Store listeners for all field PV areas
     
     /**
      * Initialize the corner details manager
      */
     initialize() {
+        console.log('CornerDetailsManager VERSION: 2024-10-02 20:15');
         if (this.initialized) return;
         
         // Subscribe to state changes to update when PV list is reordered or PV is updated
@@ -58,6 +60,112 @@ export const CornerDetailsManager = {
         });
         
         this.initialized = true;
+        this.setupGlobalFieldListeners();
+    },
+
+    /**
+     * Setup global listeners for all field PV areas
+     */
+    setupGlobalFieldListeners() {
+        // Check for new field PV areas periodically
+        setInterval(() => {
+            const allPVs = StateManager.getAllPVAreas();
+            allPVs.forEach(pv => {
+                if ((pv.type === 'field' || pv.type === 'ground') && pv.polygon) {
+                    this.attachGlobalFieldListener(pv);
+                }
+            });
+
+            // Clean up listeners for removed PVs
+            Object.keys(this.globalFieldListeners).forEach(pvId => {
+                if (!allPVs.find(pv => pv.id === pvId)) {
+                    this.removeGlobalFieldListener(pvId);
+                }
+            });
+        }, 1000);
+    },
+
+    /**
+     * Attach global listener for a field PV area
+     */
+    attachGlobalFieldListener(pv) {
+        // Skip if already has listener
+        if (this.globalFieldListeners[pv.id]) return;
+
+        const path = pv.polygon.getPath();
+        const listeners = [];
+
+        // Listen for vertex changes
+        const setAtListener = google.maps.event.addListener(path, 'set_at', (index) => {
+            // Mark topography as outdated when polygon changes
+            const currentPV = StateManager.getPVArea(pv.id);
+            if (currentPV && currentPV.topographyMode && currentPV.topographyMode !== 'none' && currentPV.topographyMode !== 'plane') {
+                console.log(`Global listener: marking topography outdated for PV ${pv.id}`);
+                StateManager.updatePVArea(pv.id, { topographyOutdated: true });
+                // Re-render if this PV's menu is open
+                if (this.currentPVId === pv.id) {
+                    this.render();
+                }
+            }
+        });
+        listeners.push(setAtListener);
+
+        // Listen for polygon drag
+        const dragEndListener = google.maps.event.addListener(pv.polygon, 'dragend', () => {
+            // Mark topography as outdated when polygon is moved
+            const currentPV = StateManager.getPVArea(pv.id);
+            if (currentPV && currentPV.topographyMode && currentPV.topographyMode !== 'none' && currentPV.topographyMode !== 'plane') {
+                console.log(`Global listener: marking topography outdated for PV ${pv.id} after drag`);
+                StateManager.updatePVArea(pv.id, { topographyOutdated: true });
+                // Re-render if this PV's menu is open
+                if (this.currentPVId === pv.id) {
+                    this.render();
+                }
+            }
+        });
+        listeners.push(dragEndListener);
+
+        // Listen for points being inserted
+        const insertAtListener = google.maps.event.addListener(path, 'insert_at', (index) => {
+            const currentPV = StateManager.getPVArea(pv.id);
+            if (currentPV && currentPV.topographyMode && currentPV.topographyMode !== 'none' && currentPV.topographyMode !== 'plane') {
+                console.log(`Global listener: marking topography outdated for PV ${pv.id} after insert`);
+                StateManager.updatePVArea(pv.id, { topographyOutdated: true });
+                if (this.currentPVId === pv.id) {
+                    this.render();
+                }
+            }
+        });
+        listeners.push(insertAtListener);
+
+        // Listen for points being removed
+        const removeAtListener = google.maps.event.addListener(path, 'remove_at', (index) => {
+            const currentPV = StateManager.getPVArea(pv.id);
+            if (currentPV && currentPV.topographyMode && currentPV.topographyMode !== 'none' && currentPV.topographyMode !== 'plane') {
+                console.log(`Global listener: marking topography outdated for PV ${pv.id} after remove`);
+                StateManager.updatePVArea(pv.id, { topographyOutdated: true });
+                if (this.currentPVId === pv.id) {
+                    this.render();
+                }
+            }
+        });
+        listeners.push(removeAtListener);
+
+        this.globalFieldListeners[pv.id] = listeners;
+        console.log(`Global field listener attached for PV ${pv.id}`);
+    },
+
+    /**
+     * Remove global listener for a field PV area
+     */
+    removeGlobalFieldListener(pvId) {
+        if (this.globalFieldListeners[pvId]) {
+            this.globalFieldListeners[pvId].forEach(listener => {
+                google.maps.event.removeListener(listener);
+            });
+            delete this.globalFieldListeners[pvId];
+            console.log(`Global field listener removed for PV ${pvId}`);
+        }
     },
     
     /**
@@ -101,10 +209,24 @@ export const CornerDetailsManager = {
         const pv = StateManager.getPVArea(pvId);
         if (!pv) return;
 
-        // For field installations, show topography dialog first if not configured
+        // For field installations, just mark that topography is not configured
         if ((pv.type === 'field' || pv.type === 'ground') && !pv.topographyMode) {
-            this.showTopographyDialog(pvId);
-            return;
+            StateManager.updatePVArea(pvId, {
+                topographyMode: 'none',
+                gridActive: false,
+                autoCalculateTerrainHeights: true  // Always auto-calculate corner heights
+            });
+        }
+
+        // Ensure corner heights are always auto-calculated
+        if (pv.type === 'field' || pv.type === 'ground') {
+            StateManager.updatePVArea(pvId, {
+                autoCalculateTerrainHeights: true
+            });
+            // Calculate terrain heights immediately
+            setTimeout(() => {
+                this.calculateTerrainHeights();
+            }, 500);
         }
 
         // Initialize if needed
@@ -159,8 +281,10 @@ export const CornerDetailsManager = {
             }
 
             this._attachFieldPathListeners(pv);
-            // Show support points on map if any exist
-            if (pv.supportPoints && pv.supportPoints.length > 0) {
+            // Show appropriate visualization
+            if (pv.topographyMode === 'plane') {
+                this.showBestFitPlaneVisualization();
+            } else if (pv.supportPoints && pv.supportPoints.length > 0) {
                 this.showSupportPointsOnMap();
             }
         }
@@ -205,14 +329,14 @@ export const CornerDetailsManager = {
             // Get current PV state to check auto-calculate
             const currentPV = StateManager.getPVArea(this.currentPVId);
 
-            // Just mark that grid needs update - don't recalculate automatically
-            if (currentPV && currentPV.gridActive) {
-                console.log('Grid is active, marking as needs update');
-                StateManager.updatePVArea(this.currentPVId, { gridNeedsUpdate: true });
+            // Mark topography as outdated when polygon changes (only if not using plane mode)
+            if (currentPV && currentPV.topographyMode && currentPV.topographyMode !== 'none' && currentPV.topographyMode !== 'plane') {
+                console.log('Marking topography as outdated due to vertex change');
+                StateManager.updatePVArea(this.currentPVId, { topographyOutdated: true });
             }
 
-            // Don't auto-calculate terrain heights on vertex changes to save API calls
-            if (currentPV && currentPV.autoCalculateTerrainHeights === true && false) {
+            // Auto-calculate terrain heights on vertex changes if enabled
+            if (currentPV && currentPV.autoCalculateTerrainHeights === true) {
                 console.log('Auto-calculate is enabled, updating terrain height for index:', index);
                 // Debounce update for specific vertex
                 if (this._vertexUpdateTimeout) {
@@ -322,11 +446,16 @@ export const CornerDetailsManager = {
                 // User must explicitly confirm the update
             }
 
-            // Only update terrain heights for corners if explicitly enabled
-            // Don't do this automatically anymore to reduce API calls
+            // Update terrain heights for corners if auto-calculate is enabled
             if (currentPV && currentPV.autoCalculateTerrainHeights === true) {
-                console.log('Auto-calculate enabled for terrain heights, but not updating automatically to save API calls');
-                StateManager.updatePVArea(this.currentPVId, { gridNeedsUpdate: true });
+                console.log('Auto-calculate enabled, updating terrain heights');
+                // Debounce to avoid excessive API calls
+                if (this._dragEndTimeout) {
+                    clearTimeout(this._dragEndTimeout);
+                }
+                this._dragEndTimeout = setTimeout(() => {
+                    this.calculateTerrainHeights();
+                }, 800);
             }
 
             // Update display
@@ -340,6 +469,11 @@ export const CornerDetailsManager = {
      * Close the corner details panel
      */
     close() {
+        // Stop manual point placement if active
+        if (this._manualPointListener) {
+            this.stopManualPointPlacement();
+        }
+
         const panel = document.getElementById('cornerDetailsPanel');
         panel.classList.remove('open');
 
@@ -460,25 +594,33 @@ export const CornerDetailsManager = {
                     </p>
                 </div>
 
-                <div class="mb-3">
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox"
-                               id="auto-calculate-terrain-heights"
-                               ${pv.autoCalculateTerrainHeights !== false ? 'checked' : ''}>
-                        <label class="form-check-label" for="auto-calculate-terrain-heights">
-                            Auto-Calculate Eckpunkt-Geländehöhen
+                <!-- Auto-Calculate Checkbox für Eckpunkt-Höhen -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="auto-calculate-terrain-heights"
+                               ${pv.autoCalculateTerrainHeights !== false ? 'checked' : ''}
+                               onchange="CornerDetailsManager.toggleAutoCalculateTerrain(this.checked)">
+                        <label class="form-check-label" for="auto-calculate-terrain-heights" style="font-size: 0.875rem;">
+                            Auto-Calculate Geländehöhe
                         </label>
                     </div>
+                    ${pv.autoCalculateTerrainHeights === false ? `
+                    <button class="btn btn-sm btn-outline-primary"
+                            onclick="CornerDetailsManager.calculateTerrainHeights()"
+                            title="Höhen jetzt abrufen">
+                        <i class="bi bi-arrow-clockwise"></i> Höhen abrufen
+                    </button>
+                    ` : ''}
                 </div>
 
                 <div class="table-responsive">
                     <table class="table table-sm table-hover mb-3" style="font-size: 0.875rem;">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 15%;">Punkt</th>
-                                <th style="width: 28%;">Breite</th>
-                                <th style="width: 28%;">Länge</th>
-                                <th style="width: 29%;">
+                                <th style="width: 12%;">Punkt</th>
+                                <th style="width: 26%;">Breite</th>
+                                <th style="width: 26%;">Länge</th>
+                                <th style="width: 26%;">
                                     Geländehöhe
                                     <i class="bi bi-info-circle text-primary ms-1"
                                        style="font-size: 0.75rem; cursor: help;"
@@ -486,6 +628,7 @@ export const CornerDetailsManager = {
                                        data-bs-placement="top"
                                        title="Höhe über NN (Normalnull)"></i>
                                 </th>
+                                <th style="width: 10%;"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -524,6 +667,15 @@ export const CornerDetailsManager = {
                                         <span class="input-group-text" style="font-size: 0.75rem;">m</span>
                                     </div>
                                 </td>
+                                <td class="text-center">
+                                    ${corners.length > 3 && !pv.locked ? `
+                                        <button class="btn btn-sm btn-link p-0 text-danger"
+                                                onclick="CornerDetailsManager.deleteCorner(${index})"
+                                                title="Eckpunkt löschen">
+                                            <i class="bi bi-trash" style="font-size: 0.9rem;"></i>
+                                        </button>
+                                    ` : ''}
+                                </td>
                             </tr>
                             `).join('')}
                         </tbody>
@@ -531,9 +683,11 @@ export const CornerDetailsManager = {
                 </div>
 
                 <!-- Support Points Section -->
-                <div class="mt-4 border-top pt-3">
+                <div class="mt-4">
+                    ${this.renderSimplifiedTopographyUI(pv)}
+                    <div class="d-none">
                     <h6 class="mb-3">
-                        <i class="bi bi-grid-3x3-gap me-2"></i>Topografie-Stützpunkte
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Topografie-Stützpunkte-ALT
                         <span class="badge bg-secondary ms-2" style="font-size: 0.7rem;">
                             ${pv.supportPoints ? pv.supportPoints.length : 0} Punkte
                         </span>
@@ -638,17 +792,27 @@ export const CornerDetailsManager = {
                         <table class="table table-sm table-hover mb-3" style="font-size: 0.8rem;">
                             <thead class="table-light sticky-top">
                                 <tr>
-                                    <th style="width: 15%;">Nr.</th>
+                                    <th style="width: 15%;">Punkt</th>
                                     <th style="width: 28%;">Breite</th>
                                     <th style="width: 28%;">Länge</th>
-                                    <th style="width: 20%;">Höhe</th>
+                                    <th style="width: 20%;">Geländehöhe</th>
                                     <th style="width: 9%;"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${pv.supportPoints.map((point, index) => `
+                                ${pv.supportPoints.map((point, index) => {
+                                    // Count manual points before this index
+                                    const manualsBefore = pv.supportPoints.slice(0, index).filter(p => p.manual).length;
+                                    const gridsBefore = index - manualsBefore;
+
+                                    // Determine label based on type
+                                    const label = point.manual ?
+                                        `M${manualsBefore + 1}` :  // Manual point numbering
+                                        `R${gridsBefore + 1}`;      // Raster point numbering
+
+                                    return `
                                 <tr>
-                                    <td class="fw-bold">S${index + 1}</td>
+                                    <td class="fw-bold">${label}</td>
                                     <td>${point.lat.toFixed(6)}</td>
                                     <td>${point.lng.toFixed(6)}</td>
                                     <td>
@@ -673,7 +837,8 @@ export const CornerDetailsManager = {
                                         </button>
                                     </td>
                                 </tr>
-                                `).join('')}
+                                `;
+                                }).join('')}
                             </tbody>
                         </table>
                     </div>
@@ -700,11 +865,6 @@ export const CornerDetailsManager = {
                 </div>
                 ` : ''}
 
-                <div class="mt-3">
-                    <button class="btn btn-secondary btn-sm w-100" onclick="CornerDetailsManager.close()">
-                        <i class="bi bi-x-circle me-2"></i>Schließen
-                    </button>
-                </div>
             `;
 
             // Add event listener for auto-calculate checkbox
@@ -881,12 +1041,6 @@ export const CornerDetailsManager = {
                     PV-Fläche ist gesperrt. Entsperren Sie sie in der PV-Liste zum Bearbeiten.
                 </div>
                 ` : ''}
-                
-                <div class="mt-3 pt-3 border-top">
-                    <button class="btn btn-secondary btn-sm w-100" onclick="CornerDetailsManager.close()">
-                        <i class="bi bi-x-circle me-1"></i>Schließen
-                    </button>
-                </div>
             `;
         } else if (pv.type === 'facade') {
             // Simple layout for facade (2 points)
@@ -948,12 +1102,6 @@ export const CornerDetailsManager = {
                     PV-Fläche ist gesperrt. Entsperren Sie sie in der PV-Liste zum Bearbeiten.
                 </div>
                 ` : ''}
-                
-                <div class="mt-4 pt-3 border-top">
-                    <button class="btn btn-secondary w-100" onclick="CornerDetailsManager.close()">
-                        <i class="bi bi-x-circle me-2"></i>Schließen
-                    </button>
-                </div>
             `;
         } else {
             // Original card layout for other types
@@ -1067,12 +1215,6 @@ export const CornerDetailsManager = {
             </div>
             
             ${corners.length === 0 ? '<p class="text-muted">Keine Eckpunkte vorhanden</p>' : ''}
-            
-            <div class="mt-4 pt-3 border-top">
-                <button class="btn btn-secondary w-100" onclick="CornerDetailsManager.close()">
-                    <i class="bi bi-x-circle me-2"></i>Schließen
-                </button>
-            </div>
         `;
         }
         
@@ -2039,6 +2181,34 @@ export const CornerDetailsManager = {
     },
 
     /**
+     * Toggle auto-calculate for terrain heights (corner heights)
+     */
+    toggleAutoCalculateTerrain(checked) {
+        StateManager.updatePVArea(this.currentPVId, {
+            autoCalculateTerrainHeights: checked
+        });
+
+        // Update input readonly state
+        const pv = StateManager.getPVArea(this.currentPVId);
+        if (pv && pv.corners) {
+            pv.corners.forEach((_, index) => {
+                const input = document.getElementById(`terrain-height-${index}`);
+                if (input) {
+                    input.readOnly = checked;
+                }
+            });
+        }
+
+        // If enabling, calculate all terrain heights
+        if (checked) {
+            this.calculateTerrainHeights();
+        }
+
+        // Re-render to update the display
+        this.render();
+    },
+
+    /**
      * Confirm grid update after geometry changes
      */
     async confirmGridUpdate() {
@@ -2091,6 +2261,16 @@ export const CornerDetailsManager = {
         // Keep manually added points
         const manualPoints = pv.supportPoints?.filter(p => p.manual) || [];
 
+        // Keep existing grid points that are still within the polygon for recycling
+        const existingGridPoints = pv.supportPoints?.filter(p => !p.manual) || [];
+        const recycledPoints = new Map(); // key: "lat,lng", value: point data
+
+        // Store existing points for potential reuse
+        existingGridPoints.forEach(point => {
+            const key = `${point.lat.toFixed(6)},${point.lng.toFixed(6)}`;
+            recycledPoints.set(key, point);
+        });
+
         // Generate new grid points
         const gridPoints = [];
         const ne = bounds.getNorthEast();
@@ -2102,16 +2282,29 @@ export const CornerDetailsManager = {
         const latSpacing = spacing / metersPerDegreeLat;
         const lngSpacing = spacing / metersPerDegreeLng;
 
-        // Generate interior grid
+        // Generate interior grid with recycling
+        let recycledCount = 0;
+        let newCount = 0;
+
         for (let lat = sw.lat(); lat <= ne.lat(); lat += latSpacing) {
             for (let lng = sw.lng(); lng <= ne.lng(); lng += lngSpacing) {
                 const point = new google.maps.LatLng(lat, lng);
                 if (google.maps.geometry.poly.containsLocation(point, pv.polygon)) {
-                    gridPoints.push({
-                        lat: lat,
-                        lng: lng,
-                        height: 0
-                    });
+                    const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+                    // Check if we can recycle this point
+                    if (recycledPoints.has(key)) {
+                        const recycled = recycledPoints.get(key);
+                        gridPoints.push(recycled);
+                        recycledCount++;
+                    } else {
+                        gridPoints.push({
+                            lat: lat,
+                            lng: lng,
+                            height: 0
+                        });
+                        newCount++;
+                    }
                 }
             }
         }
@@ -2136,6 +2329,8 @@ export const CornerDetailsManager = {
 
         // Combine grid and manual points
         const supportPoints = [...gridPoints, ...manualPoints];
+
+        console.log(`Grid update: ${recycledCount} points recycled, ${newCount} new points created`);
 
         // Update state
         StateManager.updatePVArea(this.currentPVId, { supportPoints });
@@ -2239,6 +2434,262 @@ export const CornerDetailsManager = {
     },
 
     /**
+     * Render new simplified topography UI
+     */
+    renderSimplifiedTopographyUI(pv) {
+        const hasPoints = pv.supportPoints && pv.supportPoints.length > 0;
+        const gridCount = hasPoints ? pv.supportPoints.filter(p => !p.manual).length : 0;
+        const manualCount = hasPoints ? pv.supportPoints.filter(p => p.manual).length : 0;
+        const isOutdated = pv.topographyOutdated === true;
+        const usePlane = pv.topographyMode === 'plane';
+        const needsDecision = !pv.topographyMode || pv.topographyMode === 'none';
+
+        return `
+            <div class="card border-0 mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-geo-alt me-2"></i>Topografie-Definition
+                        ${isOutdated ? '<span class="badge bg-danger ms-2">Update erforderlich</span>' : ''}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Detaillierte Erklärung -->
+                    <div class="alert alert-info mb-3" style="font-size: 0.8rem;">
+                        <h6 class="alert-heading" style="font-size: 0.9rem;">
+                            <i class="bi bi-info-circle me-2"></i>Warum ist die Topografie wichtig?
+                        </h6>
+                        <p class="mb-2">Die Topografie (Geländehöhe) beeinflusst die Blend-Berechnung erheblich:</p>
+                        <ul class="mb-2">
+                            <li><strong>Stützpunkte:</strong> Definieren die exakte Geländeform innerhalb der PV-Fläche</li>
+                            <li><strong>Eckpunkte:</strong> Definieren die Höhe an den Ecken der PV-Fläche</li>
+                            <li><strong>Best-Fit-Ebene:</strong> Berechnet eine geneigte Ebene aus den Eckpunkten (nur sinnvoll bei planarer Fläche, benötigt keine extra Stützpunkte)</li>
+                        </ul>
+                        <p class="mb-0"><strong>Tipp:</strong> Für eine schnelle Analyse nutzen Sie das 100 m Raster.</p>
+                    </div>
+
+                    ${usePlane ? `
+                        <div class="alert alert-success mb-3">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Best-Fit-Ebene aktiv</strong>
+                            <p class="mb-0 mt-1 small">Eine geneigte Ebene wird aus den ${pv.corners ? pv.corners.length : 4} Eckpunkt-Höhen berechnet</p>
+                        </div>
+
+                        <!-- Auto-Calculate Checkbox für Eckpunkt-Höhen -->
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="auto-calculate-terrain-heights"
+                                   ${pv.autoCalculateTerrainHeights !== false ? 'checked' : ''}
+                                   onchange="CornerDetailsManager.toggleAutoCalculateTerrain(this.checked)">
+                            <label class="form-check-label small" for="auto-calculate-terrain-heights">
+                                Auto-Calculate Geländehöhe
+                            </label>
+                        </div>
+
+                        <!-- Eckpunkt-Höhen Tabelle für Best-Fit-Ebene -->
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-3" style="font-size: 0.8rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 12%;">Punkt</th>
+                                        <th style="width: 23%;">Breite</th>
+                                        <th style="width: 23%;">Länge</th>
+                                        <th style="width: 19%;">Geländehöhe</th>
+                                        <th style="width: 15%;">Best-Fit</th>
+                                        <th style="width: 8%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${(pv.corners || []).map((corner, index) => {
+                                        const terrainHeight = pv.terrainHeights && pv.terrainHeights[index] !== undefined ?
+                                                             pv.terrainHeights[index] : 0;
+                                        const bestFitHeight = this.calculateBestFitHeight(pv, index);
+                                        const diff = bestFitHeight - terrainHeight;
+                                        const diffColor = Math.abs(diff) < 0.5 ? 'text-success' :
+                                                         Math.abs(diff) < 1.0 ? 'text-warning' : 'text-danger';
+
+                                        return `
+                                        <tr>
+                                            <td class="fw-bold">${index + 1}</td>
+                                            <td>${corner.lat.toFixed(6)}</td>
+                                            <td>${corner.lng.toFixed(6)}</td>
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number"
+                                                           class="form-control form-control-sm"
+                                                           value="${terrainHeight.toFixed(1)}"
+                                                           step="0.1"
+                                                           onchange="CornerDetailsManager.updateTerrainHeight(${index}, this.value)"
+                                                           ${pv.autoCalculateTerrainHeights !== false ? 'readonly' : ''}>
+                                                    <span class="input-group-text" style="font-size: 0.75rem;">m</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="${diffColor}">
+                                                    ${bestFitHeight.toFixed(1)} m
+                                                    ${Math.abs(diff) > 0.1 ? `
+                                                    <small class="d-block" style="font-size: 0.7rem;">
+                                                        (${diff > 0 ? '+' : ''}${diff.toFixed(1)})
+                                                    </small>
+                                                    ` : ''}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                ${(pv.corners || []).length > 3 && !pv.locked ? `
+                                                    <button class="btn btn-sm btn-link p-0 text-danger"
+                                                            onclick="CornerDetailsManager.deleteCorner(${index})"
+                                                            title="Eckpunkt löschen">
+                                                        <i class="bi bi-trash" style="font-size: 0.9rem;"></i>
+                                                    </button>
+                                                ` : ''}
+                                            </td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        ${(pv.corners || []).length > 0 ? `
+                        <div class="alert alert-info" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Best-Fit-Ebene:</strong> Die berechneten Höhen zeigen die optimale Ebene durch alle Eckpunkte.
+                            Abweichungen werden farblich hervorgehoben:
+                            <span class="text-success">< 0.5m</span>,
+                            <span class="text-warning">0.5-1.0m</span>,
+                            <span class="text-danger">> 1.0m</span>
+                        </div>
+                        ` : ''}
+                    ` : !hasPoints ? `
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            <strong>Keine Stützpunkte definiert</strong>
+                            <p class="mb-0 mt-1 small">Wählen Sie eine Methode zur Stützpunkt-Definition</p>
+                        </div>
+                    ` : isOutdated ? `
+                        <div class="alert alert-danger mb-3">
+                            <i class="bi bi-arrow-repeat me-2"></i>
+                            <strong>Fläche wurde verändert</strong>
+                            <p class="mb-2 mt-2 small">Bitte prüfen und bestätigen Sie die Topografie oder passen Sie sie an.</p>
+                            <button class="btn btn-success btn-sm" onclick="CornerDetailsManager.confirmTopography()">
+                                <i class="bi bi-check me-1"></i>Topografie ist korrekt
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="alert alert-success mb-3">
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-primary"><i class="bi bi-grid-3x3 me-1"></i>${gridCount} Rasterpunkte</span>
+                                ${manualCount > 0 ? `<span class="badge bg-info"><i class="bi bi-pin-map me-1"></i>${manualCount} Manuell</span>` : ''}
+                            </div>
+                        </div>
+                    `}
+
+                    <div class="d-grid gap-2">
+                        ${!usePlane ? `
+                        <button class="btn btn-outline-primary btn-sm" onclick="CornerDetailsManager.quickGrid100m()"
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                title="Für eine schnelle Analyse nutzen Sie das 100 m Raster">
+                            <i class="bi bi-grid-3x3 me-2"></i>100 m Raster erstellen
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="CornerDetailsManager.showGridOptions()">
+                            <i class="bi bi-sliders me-2"></i>Custom Raster
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="CornerDetailsManager.startManualPointPlacement()">
+                            <i class="bi bi-pin-map me-2"></i>Punkte manuell setzen
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="CornerDetailsManager.importPoints()">
+                            <i class="bi bi-upload me-2"></i>XYZ/CSV importieren
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="CornerDetailsManager.useBestFitPlane()">
+                            <i class="bi bi-square me-2"></i>Best-Fit-Ebene verwenden
+                        </button>
+                        ` : `
+                        <button class="btn btn-outline-secondary btn-sm" onclick="CornerDetailsManager.switchToPoints()">
+                            <i class="bi bi-arrow-left me-2"></i>Andere Methode wählen
+                        </button>
+                        `}
+                        ${hasPoints && !usePlane ? `
+                        <hr class="my-2">
+                        <button class="btn btn-outline-danger btn-sm" onclick="CornerDetailsManager.clearAllPoints()">
+                            <i class="bi bi-trash me-2"></i>Alle Punkte löschen
+                        </button>
+                        ` : ''}
+                    </div>
+
+                    ${hasPoints && !usePlane ? `
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="auto-height-calc"
+                               ${pv.autoCalculateSupportHeights !== false ? 'checked' : ''}
+                               onchange="CornerDetailsManager.toggleAutoHeightCalc(this.checked)">
+                        <label class="form-check-label small" for="auto-height-calc">
+                            Auto-Calculate Geländehöhe
+                        </label>
+                    </div>
+
+                    <!-- Stützpunkte Tabelle -->
+                    <div class="mt-3">
+                        <div class="mb-2">
+                            <label class="form-label mb-0" style="font-size: 0.875rem;">Stützpunkte</label>
+                        </div>
+
+                        ${pv.supportPoints && pv.supportPoints.length > 0 ? `
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-3" style="font-size: 0.8rem;">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 15%;">Punkt</th>
+                                        <th style="width: 28%;">Breite</th>
+                                        <th style="width: 28%;">Länge</th>
+                                        <th style="width: 20%;">Geländehöhe</th>
+                                        <th style="width: 9%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${pv.supportPoints.map((point, index) => {
+                                        // Count manual points before this index
+                                        const manualsBefore = pv.supportPoints.slice(0, index).filter(p => p.manual).length;
+                                        const gridsBefore = index - manualsBefore;
+
+                                        // Determine label based on type
+                                        const label = point.manual ?
+                                            `M${manualsBefore + 1}` :  // Manual point numbering
+                                            `R${gridsBefore + 1}`;      // Raster point numbering
+
+                                        return `
+                                    <tr>
+                                        <td class="fw-bold">${label}</td>
+                                        <td>${point.lat.toFixed(6)}</td>
+                                        <td>${point.lng.toFixed(6)}</td>
+                                        <td>
+                                            <input type="number"
+                                                   value="${point.height || 0}"
+                                                   class="form-control form-control-sm p-0 text-center"
+                                                   style="height: 22px; font-size: 0.8rem;"
+                                                   ${pv.autoCalculateSupportHeights !== false ? 'disabled' : ''}
+                                                   onchange="CornerDetailsManager.updateSupportPointHeight(${index}, this.value)">
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-link p-0"
+                                                    onclick="CornerDetailsManager.deleteSupportPoint(${index})">
+                                                <i class="bi bi-trash text-danger"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        ` : `
+                        <div class="alert alert-light text-center py-2" style="font-size: 0.8rem;">
+                            Noch keine Stützpunkte definiert
+                        </div>
+                        `}
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    },
+
+    /**
      * Show topography configuration dialog
      */
     showTopographyDialog(pvId) {
@@ -2249,37 +2700,31 @@ export const CornerDetailsManager = {
         const modal = document.createElement('div');
         modal.innerHTML = `
             <div class="modal fade" id="topographyModal" tabindex="-1" data-bs-backdrop="static">
-                <div class="modal-dialog modal-lg">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
+                        <div class="modal-header">
                             <h5 class="modal-title">
-                                <i class="bi bi-layers-fill me-2"></i>
-                                Topografie für "${pv.name || 'PV-Fläche ' + pv.id.slice(-4)}" definieren
+                                <i class="bi bi-geo-alt me-2"></i>
+                                Geländehöhe verwalten
                             </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="alert alert-info mb-4">
-                                <h6 class="alert-heading">
-                                    <i class="bi bi-info-circle me-2"></i>Warum ist das wichtig?
-                                </h6>
-                                <p class="mb-0 small">
-                                    Die Topografie beeinflusst maßgeblich die Glare-Berechnung.
-                                    Wählen Sie, wie die Geländehöhen für Ihre PV-Fläche erfasst werden sollen.
-                                </p>
-                            </div>
+                            <p class="text-muted mb-4">
+                                Wählen Sie, wie die Geländehöhen für diese Freifläche ermittelt werden sollen.
+                            </p>
 
                             <div class="row g-3">
                                 <!-- Option 1: Automatic Grid -->
                                 <div class="col-md-6">
-                                    <div class="card h-100 border-primary topography-option" data-option="grid">
+                                    <div class="card h-100 topography-option" data-option="grid">
                                         <div class="card-body text-center">
                                             <div class="mb-3">
-                                                <i class="bi bi-grid-3x3-gap-fill text-primary" style="font-size: 3rem;"></i>
+                                                <i class="bi bi-grid-3x3-gap-fill" style="font-size: 3rem; color: #0066cc;"></i>
                                             </div>
                                             <h6 class="card-title">Automatisches Raster</h6>
                                             <p class="card-text small text-muted">
-                                                Generiert ein gleichmäßiges 100m-Raster über die gesamte Fläche.
-                                                Die Höhen werden automatisch via Google Elevation API ermittelt.
+                                                100m-Raster mit automatischer Höhenermittlung
                                             </p>
                                             <div class="badge bg-success">Empfohlen</div>
                                         </div>
@@ -2291,12 +2736,11 @@ export const CornerDetailsManager = {
                                     <div class="card h-100 topography-option" data-option="manual">
                                         <div class="card-body text-center">
                                             <div class="mb-3">
-                                                <i class="bi bi-pin-map-fill text-info" style="font-size: 3rem;"></i>
+                                                <i class="bi bi-pin-map-fill" style="font-size: 3rem; color: #17a2b8;"></i>
                                             </div>
-                                            <h6 class="card-title">Eigene Stützpunkte</h6>
+                                            <h6 class="card-title">Eigene Messpunkte</h6>
                                             <p class="card-text small text-muted">
-                                                Setzen Sie manuell Punkte oder importieren Sie vorhandene XYZ-Daten.
-                                                Ideal wenn Sie präzise Vermessungsdaten haben.
+                                                Manuelle Punkte oder XYZ-Import
                                             </p>
                                             <div class="badge bg-info">Präzise</div>
                                         </div>
@@ -2308,12 +2752,11 @@ export const CornerDetailsManager = {
                                     <div class="card h-100 topography-option" data-option="both">
                                         <div class="card-body text-center">
                                             <div class="mb-3">
-                                                <i class="bi bi-layers-fill text-warning" style="font-size: 3rem;"></i>
+                                                <i class="bi bi-layers-fill" style="font-size: 3rem; color: #ffc107;"></i>
                                             </div>
-                                            <h6 class="card-title">Raster + Eigene Punkte</h6>
+                                            <h6 class="card-title">Kombiniert</h6>
                                             <p class="card-text small text-muted">
-                                                Kombiniert automatisches Raster mit eigenen Messpunkten
-                                                für maximale Genauigkeit.
+                                                Raster + eigene Messpunkte
                                             </p>
                                             <div class="badge bg-warning text-dark">Flexibel</div>
                                         </div>
@@ -2325,12 +2768,11 @@ export const CornerDetailsManager = {
                                     <div class="card h-100 topography-option" data-option="plane">
                                         <div class="card-body text-center">
                                             <div class="mb-3">
-                                                <i class="bi bi-square-fill text-secondary" style="font-size: 3rem;"></i>
+                                                <i class="bi bi-square-fill" style="font-size: 3rem; color: #6c757d;"></i>
                                             </div>
                                             <h6 class="card-title">Ebene Fläche</h6>
                                             <p class="card-text small text-muted">
-                                                Nimmt eine ebene Fläche an. Eine Best-Fit-Ebene wird
-                                                aus den Eckpunkten berechnet.
+                                                Best-Fit-Ebene aus Eckpunkten
                                             </p>
                                             <div class="badge bg-secondary">Einfach</div>
                                         </div>
@@ -2341,18 +2783,16 @@ export const CornerDetailsManager = {
                             <div class="alert alert-warning mt-3 mb-0 d-none" id="planeWarning">
                                 <small>
                                     <i class="bi bi-exclamation-triangle me-2"></i>
-                                    <strong>Hinweis:</strong> Bei einer ebenen Fläche wird angenommen, dass das Gelände
-                                    komplett flach ist. Dies kann zu ungenauen Ergebnissen führen, wenn das reale
-                                    Gelände Höhenunterschiede aufweist.
+                                    <strong>Hinweis:</strong> Eine ebene Fläche kann bei unebenem Gelände zu ungenauen Ergebnissen führen.
                                 </small>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" id="skipTopographyBtn">
-                                <i class="bi bi-x-circle me-2"></i>Abbrechen
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Abbrechen
                             </button>
                             <button type="button" class="btn btn-primary" id="confirmTopographyOption" disabled>
-                                <i class="bi bi-check-circle me-2"></i>Auswahl bestätigen
+                                <i class="bi bi-check-lg me-2"></i>Bestätigen
                             </button>
                         </div>
                     </div>
@@ -2363,21 +2803,23 @@ export const CornerDetailsManager = {
 
         // Add CSS for card hover effect
         const style = document.createElement('style');
-        style.innerHTML = \`
+        style.innerHTML = `
             .topography-option {
                 cursor: pointer;
                 transition: all 0.3s;
+                border: 2px solid #dee2e6;
             }
             .topography-option:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                border-color: #adb5bd;
             }
             .topography-option.selected {
-                border-color: #0d6efd !important;
+                border-color: #0066cc !important;
                 border-width: 2px;
-                background-color: #f0f8ff;
+                background-color: #f0f7ff;
             }
-        \`;
+        `;
         document.head.appendChild(style);
 
         // Add click handlers for cards
@@ -2408,12 +2850,6 @@ export const CornerDetailsManager = {
             modalInstance.hide();
         });
 
-        // Add skip handler
-        document.getElementById('skipTopographyBtn').addEventListener('click', () => {
-            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('topographyModal'));
-            modalInstance.hide();
-        });
-
         // Show modal
         const modalInstance = new bootstrap.Modal(document.getElementById('topographyModal'));
         modalInstance.show();
@@ -2438,7 +2874,8 @@ export const CornerDetailsManager = {
                 StateManager.updatePVArea(pvId, {
                     gridActive: true,
                     gridNeedsUpdate: false,
-                    topographyMode: 'grid'
+                    topographyMode: 'grid',
+                    topographyOutdated: false
                 });
 
                 this.currentPVId = pvId;
@@ -2453,18 +2890,25 @@ export const CornerDetailsManager = {
             case 'manual':
                 StateManager.updatePVArea(pvId, {
                     gridActive: false,
-                    topographyMode: 'manual'
+                    topographyMode: 'manual',
+                    topographyOutdated: false
                 });
 
                 // Open panel for manual entry
                 this.open(pvId);
+
+                // Immediately start manual placement
+                setTimeout(() => {
+                    this.startManualPointPlacement();
+                }, 100);
                 break;
 
             case 'both':
                 StateManager.updatePVArea(pvId, {
                     gridActive: true,
                     gridNeedsUpdate: false,
-                    topographyMode: 'both'
+                    topographyMode: 'both',
+                    topographyOutdated: false
                 });
 
                 this.currentPVId = pvId;
@@ -2481,7 +2925,8 @@ export const CornerDetailsManager = {
                 StateManager.updatePVArea(pvId, {
                     gridActive: false,
                     useBestFitPlane: true,
-                    topographyMode: 'plane'
+                    topographyMode: 'plane',
+                    topographyOutdated: false
                 });
 
                 UIManager.showNotification('Ebene Fläche angenommen - Best-Fit-Ebene wird aus Eckpunkten berechnet', 'info');
@@ -2576,9 +3021,389 @@ export const CornerDetailsManager = {
     /**
      * Generate default 100m grid immediately
      */
-    async generateDefaultGrid() {
+    quickGrid100m() {
+        this.generateDefaultGrid();
+    },
+
+    showGridOptions() {
+        this.showGridGeneratorDialog();
+    },
+
+    importPoints() {
+        this.showImportDialog();
+    },
+
+    showImportDialog() {
+        // Create import dialog
+        const modal = document.createElement('div');
+        modal.innerHTML = `
+            <div class="modal fade" id="importPointsModal" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-upload me-2"></i>Punkte importieren
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Datei auswählen</label>
+                                <input type="file" class="form-control" id="importFileInput" accept=".csv,.xyz,.txt">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Format</label>
+                                <select class="form-select" id="importFileFormat">
+                                    <option value="csv">CSV (Komma-getrennt)</option>
+                                    <option value="xyz">XYZ (Leerzeichen-getrennt)</option>
+                                </select>
+                            </div>
+                            <div class="alert alert-info" style="font-size: 0.875rem;">
+                                <p class="mb-2"><strong>CSV Format:</strong> Lng,Lat,Height oder X,Y,Z</p>
+                                <p class="mb-2"><strong>XYZ Format:</strong> X Y Z (Leerzeichen oder Tab getrennt)</p>
+                                <p class="mb-0">Punkte außerhalb der PV-Fläche werden automatisch ignoriert.</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                            <button type="button" class="btn btn-primary" onclick="CornerDetailsManager.processImportFile()">
+                                <i class="bi bi-check-lg me-2"></i>Importieren
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal.firstElementChild);
+
+        const modalInstance = new bootstrap.Modal(document.getElementById('importPointsModal'));
+        modalInstance.show();
+
+        // Clean up when modal is hidden
+        document.getElementById('importPointsModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    },
+
+    async processImportFile() {
+        const fileInput = document.getElementById('importFileInput');
+        const format = document.getElementById('importFileFormat').value;
+
+        if (!fileInput.files[0]) {
+            alert('Bitte wählen Sie eine Datei aus');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const text = await file.text();
+        const pv = StateManager.getPVArea(this.currentPVId);
+
+        if (!pv) {
+            alert('Keine PV-Fläche gefunden');
+            return;
+        }
+
+        let points = [];
+        const lines = text.trim().split('\n');
+
+        for (let line of lines) {
+            if (!line.trim()) continue;
+
+            let coords;
+            if (format === 'csv') {
+                // Skip header if present
+                if (line.toLowerCase().includes('lat') || line.toLowerCase().includes('lng')) continue;
+                coords = line.split(',').map(v => parseFloat(v.trim()));
+            } else {
+                // XYZ format
+                coords = line.split(/\s+/).map(v => parseFloat(v.trim()));
+            }
+
+            if (coords.length >= 3 && !isNaN(coords[0]) && !isNaN(coords[1]) && !isNaN(coords[2])) {
+                // Assuming X=Lng, Y=Lat, Z=Height
+                const point = new google.maps.LatLng(coords[1], coords[0]);
+
+                // Check if inside polygon
+                if (google.maps.geometry.poly.containsLocation(point, pv.polygon)) {
+                    points.push({
+                        lat: coords[1],
+                        lng: coords[0],
+                        height: Math.round(coords[2] * 10) / 10, // Round to 1 decimal
+                        manual: true // Mark as manually imported
+                    });
+                }
+            }
+        }
+
+        if (points.length > 0) {
+            // Add to existing support points
+            const existingPoints = pv.supportPoints || [];
+            const supportPoints = [...existingPoints, ...points];
+
+            StateManager.updatePVArea(this.currentPVId, {
+                supportPoints,
+                topographyMode: existingPoints.length > 0 ? 'both' : 'manual',
+                topographyOutdated: false
+            });
+
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('importPointsModal')).hide();
+
+            // Refresh display
+            this.render();
+            this.showSupportPointsOnMap();
+
+            UIManager.showNotification(`${points.length} Punkte erfolgreich importiert`, 'success');
+        } else {
+            alert('Keine gültigen Punkte in der Datei gefunden oder alle Punkte liegen außerhalb der PV-Fläche');
+        }
+    },
+
+    clearAllPoints() {
+        // Create professional confirmation modal
+        const modal = document.createElement('div');
+        modal.innerHTML = `
+            <div class="modal fade" id="confirmDeleteModal" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Stützpunkte löschen
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Sind Sie sicher, dass Sie alle Stützpunkte löschen möchten?</p>
+                            <p class="text-muted small mb-0">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                                <i class="bi bi-trash me-2"></i>Alle löschen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal.firstElementChild);
+
+        const modalInstance = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+        modalInstance.show();
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+            StateManager.updatePVArea(this.currentPVId, {
+                supportPoints: [],
+                topographyOutdated: false,
+                topographyMode: 'none'
+            });
+            this.hideSupportPointsOnMap();
+            this.render();
+            modalInstance.hide();
+        });
+
+        document.getElementById('confirmDeleteModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    },
+
+    toggleAutoHeightCalc(checked) {
+        StateManager.updatePVArea(this.currentPVId, {
+            autoCalculateSupportHeights: checked
+        });
+        if (checked) {
+            this.updateAllSupportPointHeights();
+        }
+    },
+
+    confirmTopography() {
+        // Clear the outdated flag when user confirms topography is correct
+        StateManager.updatePVArea(this.currentPVId, {
+            topographyOutdated: false
+        });
+        UIManager.showNotification('Topografie bestätigt', 'success');
+        this.render();
+    },
+
+    useBestFitPlane() {
+        // Stop manual point placement if active
+        if (this._manualPointListener) {
+            this.stopManualPointPlacement();
+        }
+
+        StateManager.updatePVArea(this.currentPVId, {
+            topographyMode: 'plane',
+            supportPoints: [],
+            gridActive: false,
+            topographyOutdated: false
+        });
+        this.hideSupportPointsOnMap();
+        this.showBestFitPlaneVisualization();
+        this.render();
+    },
+
+    showBestFitPlaneVisualization() {
         const pv = StateManager.getPVArea(this.currentPVId);
         if (!pv || !pv.polygon) return;
+
+        // Hide any existing visualization
+        this.hideBestFitPlaneVisualization();
+
+        // Create a semi-transparent overlay with gradient to show plane inclination
+        const path = pv.polygon.getPath();
+        const coordinates = [];
+        for (let i = 0; i < path.getLength(); i++) {
+            coordinates.push(path.getAt(i));
+        }
+
+        // Create plane visualization polygon with gradient effect
+        this.planeVisualization = new google.maps.Polygon({
+            paths: coordinates,
+            strokeColor: '#17a2b8',
+            strokeOpacity: 0.9,
+            strokeWeight: 3,
+            fillColor: '#17a2b8',
+            fillOpacity: 0.2,
+            map: MapManager.map,
+            clickable: false,
+            zIndex: 999
+        });
+
+        // Calculate best-fit plane heights for all corners
+        const corners = [];
+        const bestFitHeights = [];
+
+        for (let i = 0; i < path.getLength(); i++) {
+            const corner = path.getAt(i);
+            corners.push(corner);
+
+            // Calculate the best-fit height for this corner
+            const height = parseFloat(this.calculateBestFitHeight(pv, i));
+            bestFitHeights.push(height);
+        }
+
+        // Add height labels showing Best-Fit plane heights at each corner
+        this.planeHeightLabels = [];
+
+        corners.forEach((corner, index) => {
+            const height = bestFitHeights[index];
+            const actualHeight = (pv.referenceHeight || 0) + (pv.cornerHeights?.[index] || 0);
+            const difference = height - actualHeight;
+
+            // Show both best-fit height and difference from actual
+            const labelText = difference === 0 ?
+                `${height.toFixed(1)}m` :
+                `${height.toFixed(1)}m\n(${difference > 0 ? '+' : ''}${difference.toFixed(1)})`;
+
+            const label = new google.maps.Marker({
+                position: corner,
+                map: MapManager.map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 0,
+                },
+                label: {
+                    text: labelText,
+                    color: '#17a2b8',
+                    fontSize: '11px',
+                    fontWeight: 'bold'
+                },
+                zIndex: 1000
+            });
+            this.planeHeightLabels.push(label);
+        });
+
+        // Add a center marker showing plane equation or inclination
+        const bounds = new google.maps.LatLngBounds();
+        corners.forEach(corner => bounds.extend(corner));
+        const center = bounds.getCenter();
+
+        // Calculate plane inclination
+        const points = [];
+        for (let i = 0; i < corners.length; i++) {
+            const corner = corners[i];
+            const x = this.latLngToMeters(corner.lat(), corners[0].lat());
+            const y = this.latLngToMeters(corner.lng(), corners[0].lng());
+            const z = bestFitHeights[i];
+            points.push({ x, y, z });
+        }
+
+        const plane = this.calculateBestFitPlane(points);
+        if (plane) {
+            // Calculate tilt angle (angle between plane normal and vertical)
+            const tiltRad = Math.acos(Math.abs(plane.normal.z));
+            const tiltDeg = tiltRad * 180 / Math.PI;
+
+            // Calculate azimuth of tilt direction
+            const azimuthRad = Math.atan2(plane.normal.x, plane.normal.y);
+            const azimuthDeg = (azimuthRad * 180 / Math.PI + 360) % 360;
+
+            const infoLabel = new google.maps.Marker({
+                position: center,
+                map: MapManager.map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 0,
+                },
+                label: {
+                    text: `Neigung: ${tiltDeg.toFixed(1)}°\nRichtung: ${azimuthDeg.toFixed(0)}°`,
+                    color: '#0056b3',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                },
+                zIndex: 1001
+            });
+            this.planeHeightLabels.push(infoLabel);
+        }
+    },
+
+    hideBestFitPlaneVisualization() {
+        if (this.planeVisualization) {
+            this.planeVisualization.setMap(null);
+            this.planeVisualization = null;
+        }
+        if (this.planeHeightLabels) {
+            this.planeHeightLabels.forEach(label => label.setMap(null));
+            this.planeHeightLabels = [];
+        }
+    },
+
+    switchToPoints() {
+        StateManager.updatePVArea(this.currentPVId, {
+            topographyMode: 'none',
+            topographyOutdated: false
+        });
+        this.hideBestFitPlaneVisualization();
+        this.render();
+    },
+
+    async generateDefaultGrid() {
+        console.log('generateDefaultGrid called for PV:', this.currentPVId);
+
+        // Stop manual point placement if active
+        if (this._manualPointListener) {
+            this.stopManualPointPlacement();
+        }
+
+        const pv = StateManager.getPVArea(this.currentPVId);
+        if (!pv) {
+            console.error('No PV found for ID:', this.currentPVId);
+            return;
+        }
+        if (!pv.polygon) {
+            console.error('PV has no polygon:', this.currentPVId);
+            return;
+        }
+
+        console.log('Generating grid for PV with', pv.corners?.length || 0, 'corners');
+
+        // Set topography mode to grid and clear outdated flag
+        StateManager.updatePVArea(this.currentPVId, {
+            topographyMode: 'grid',
+            topographyOutdated: false,
+            gridActive: true
+        });
 
         // Set default spacing to 100m
         const spacing = 100;
@@ -2596,43 +3421,63 @@ export const CornerDetailsManager = {
         const ne = bounds.getNorthEast();
         const sw = bounds.getSouthWest();
 
+        console.log('Bounds:', 'SW:', sw.lat(), sw.lng(), 'NE:', ne.lat(), ne.lng());
+
         // Convert spacing from meters to approximate degrees
         const metersPerDegreeLat = 111000;
         const metersPerDegreeLng = 111000 * Math.cos(sw.lat() * Math.PI / 180);
         const latSpacing = spacing / metersPerDegreeLat;
         const lngSpacing = spacing / metersPerDegreeLng;
 
+        console.log('Spacing in degrees:', 'lat:', latSpacing, 'lng:', lngSpacing);
+
         // Generate grid
+        let totalChecked = 0;
+        let totalInside = 0;
         for (let lat = sw.lat(); lat <= ne.lat(); lat += latSpacing) {
             for (let lng = sw.lng(); lng <= ne.lng(); lng += lngSpacing) {
+                totalChecked++;
                 const point = new google.maps.LatLng(lat, lng);
                 if (google.maps.geometry.poly.containsLocation(point, pv.polygon)) {
+                    totalInside++;
                     supportPoints.push({
                         lat: lat,
                         lng: lng,
-                        height: 0
+                        height: 0,
+                        manual: false
                     });
                 }
             }
         }
 
-        // Add boundary points
-        for (let i = 0; i < path.getLength(); i++) {
-            const start = path.getAt(i);
-            const end = path.getAt((i + 1) % path.getLength());
-            const distance = google.maps.geometry.spherical.computeDistanceBetween(start, end);
-            const numPoints = Math.floor(distance / spacing);
+        console.log('Grid generation:', totalChecked, 'points checked,', totalInside, 'inside polygon');
 
-            for (let j = 1; j < numPoints; j++) {
-                const fraction = j / numPoints;
-                const interpolated = google.maps.geometry.spherical.interpolate(start, end, fraction);
-                supportPoints.push({
-                    lat: interpolated.lat(),
-                    lng: interpolated.lng(),
-                    height: 0
-                });
+        // Add boundary points if requested
+        if (includeBoundary) {
+            console.log('Adding boundary points...');
+            let boundaryCount = 0;
+            for (let i = 0; i < path.getLength(); i++) {
+                const start = path.getAt(i);
+                const end = path.getAt((i + 1) % path.getLength());
+                const distance = google.maps.geometry.spherical.computeDistanceBetween(start, end);
+                const numPoints = Math.floor(distance / spacing);
+
+                for (let j = 1; j < numPoints; j++) {
+                    const fraction = j / numPoints;
+                    const interpolated = google.maps.geometry.spherical.interpolate(start, end, fraction);
+                    supportPoints.push({
+                        lat: interpolated.lat(),
+                        lng: interpolated.lng(),
+                        height: 0,
+                        manual: false
+                    });
+                    boundaryCount++;
+                }
             }
+            console.log('Added', boundaryCount, 'boundary points');
         }
+
+        console.log('Total generated support points:', supportPoints.length, '(corner points are managed separately)');
 
         // Update state
         StateManager.updatePVArea(this.currentPVId, {
@@ -2643,14 +3488,20 @@ export const CornerDetailsManager = {
             supportMode: 'grid'
         });
 
+        console.log('State updated, auto-calculate support heights:', pv.autoCalculateSupportHeights);
+
         // Auto-calculate heights if enabled
         if (pv.autoCalculateSupportHeights !== false) {
+            console.log('Starting height calculation...');
             await this.updateAllSupportPointHeights();
         }
 
         // Re-render and show points on map
+        console.log('Rendering grid...');
         this.render();
         this.showSupportPointsOnMap();
+
+        console.log('Grid generation complete');
     },
 
     /**
@@ -2768,11 +3619,25 @@ export const CornerDetailsManager = {
         const pv = StateManager.getPVArea(this.currentPVId);
         if (!pv || pv.locked) return;
 
+        // Stop any existing manual point placement first
+        if (this._manualPointListener) {
+            console.log('Stopping existing manual point listener before starting new one');
+            this.stopManualPointPlacement();
+        }
+
         const map = MapManager.getMap();
 
         // Temporarily disable polygon clickability to allow clicks through
         if (pv.polygon) {
-            pv.polygon.setOptions({ clickable: false });
+            // Store original settings
+            this._originalPolygonOptions = {
+                clickable: pv.polygon.getClickable !== undefined ? pv.polygon.getClickable() : true
+            };
+
+            // Make polygon non-clickable but keep visual appearance
+            pv.polygon.setOptions({
+                clickable: false
+            });
         }
 
         // Change cursor
@@ -2791,53 +3656,103 @@ export const CornerDetailsManager = {
         `;
         document.body.appendChild(infoDiv);
 
+        // Store the current PV ID for the click handler
+        const pvId = this.currentPVId;
+
+        // Add debounce flag to prevent rapid clicks
+        let isProcessing = false;
+
         // Store click listener
         this._manualPointListener = google.maps.event.addListener(map, 'click', (event) => {
+            // Prevent rapid clicks
+            if (isProcessing) {
+                console.log('Click ignored - still processing previous click');
+                return;
+            }
+            isProcessing = true;
+
+            console.log('Map clicked for manual point at:', event.latLng.lat(), event.latLng.lng());
+
+            // Prevent event from bubbling/being handled multiple times
+            if (event.stop) {
+                event.stop();
+            }
+
+            // Get fresh PV data
+            const freshPV = StateManager.getPVArea(pvId);
+            if (!freshPV) {
+                console.log('No PV found for ID:', pvId);
+                return;
+            }
+            if (!freshPV.polygon) {
+                console.log('PV has no polygon');
+                return;
+            }
+
             // Check if click is inside polygon
-            if (google.maps.geometry.poly.containsLocation(event.latLng, pv.polygon)) {
-                const supportPoints = [...(pv.supportPoints || [])];
-                supportPoints.push({
+            if (google.maps.geometry.poly.containsLocation(event.latLng, freshPV.polygon)) {
+                console.log('Click is inside polygon, adding manual point');
+                console.log('Current supportPoints before adding:', freshPV.supportPoints ? freshPV.supportPoints.length : 0, 'points');
+
+                const existingPoints = freshPV.supportPoints || [];
+                const newPoint = {
                     lat: event.latLng.lat(),
                     lng: event.latLng.lng(),
                     height: 0,
                     manual: true  // Mark as manually added
-                });
+                };
+
+                const supportPoints = [...existingPoints, newPoint];
+                console.log('New supportPoints after adding:', supportPoints.length, 'points');
 
                 // Update state and check if we have manual points now
                 const hasManualPoints = supportPoints.some(p => p.manual);
                 const hasGridPoints = supportPoints.some(p => !p.manual);
 
-                // Update support mode if needed
-                let newSupportMode = pv.supportMode;
+                // Update support mode and topography mode
+                let newSupportMode = freshPV.supportMode;
+                let newTopographyMode = freshPV.topographyMode;
+
                 if (hasManualPoints && hasGridPoints) {
                     newSupportMode = 'both';
+                    newTopographyMode = 'both';
                 } else if (hasManualPoints) {
                     newSupportMode = 'manual';
+                    newTopographyMode = 'manual';
                 } else if (hasGridPoints) {
                     newSupportMode = 'grid';
+                    newTopographyMode = 'grid';
                 }
 
-                StateManager.updatePVArea(this.currentPVId, {
+                StateManager.updatePVArea(pvId, {
                     supportPoints,
                     hasManualPoints,
-                    supportMode: newSupportMode
+                    supportMode: newSupportMode,
+                    topographyMode: newTopographyMode,
+                    topographyOutdated: false
                 });
 
                 // Calculate height if auto-calculate is on
-                const currentPV = StateManager.getPVArea(this.currentPVId);
-                if (currentPV && currentPV.autoCalculateSupportHeights !== false) {
+                const updatedPV = StateManager.getPVArea(pvId);
+                if (updatedPV && updatedPV.autoCalculateSupportHeights !== false) {
                     this.calculateSingleSupportPointHeight(supportPoints.length - 1);
                 }
 
-                // Just add the new marker without re-rendering everything
+                // Add the new marker and update the table
                 this.addSingleSupportPointMarker(supportPoints.length - 1);
+                this.render();  // Update the table to show the new point
             } else {
                 // Flash red border on polygon
-                pv.polygon.setOptions({ strokeColor: '#FF0000' });
+                freshPV.polygon.setOptions({ strokeColor: '#FF0000' });
                 setTimeout(() => {
-                    pv.polygon.setOptions({ strokeColor: '#4285F4' });
+                    freshPV.polygon.setOptions({ strokeColor: '#4285F4' });
                 }, 200);
             }
+
+            // Reset processing flag after a short delay
+            setTimeout(() => {
+                isProcessing = false;
+            }, 100);
         });
 
         // Store info div reference for cleanup
@@ -2853,10 +3768,20 @@ export const CornerDetailsManager = {
         // Reset cursor
         map.setOptions({ draggableCursor: null });
 
-        // Re-enable polygon clickability
+        // Restore polygon original settings
         const pv = StateManager.getPVArea(this.currentPVId);
         if (pv && pv.polygon) {
-            pv.polygon.setOptions({ clickable: true });
+            if (this._originalPolygonOptions) {
+                pv.polygon.setOptions({
+                    clickable: this._originalPolygonOptions.clickable
+                });
+                this._originalPolygonOptions = null;
+            } else {
+                // Fallback if no original options stored
+                pv.polygon.setOptions({
+                    clickable: true
+                });
+            }
         }
 
         // Remove listener
@@ -3063,9 +3988,9 @@ export const CornerDetailsManager = {
                     });
                 });
 
-                // Update heights
+                // Update heights - round to 1 decimal place
                 response.forEach((result, j) => {
-                    supportPoints[i + j].height = result.elevation;
+                    supportPoints[i + j].height = Math.round(result.elevation * 10) / 10;
                 });
             }
 
@@ -3102,7 +4027,7 @@ export const CornerDetailsManager = {
             });
 
             const supportPoints = [...pv.supportPoints];
-            supportPoints[index].height = response.elevation;
+            supportPoints[index].height = Math.round(response.elevation * 10) / 10;
             StateManager.updatePVArea(this.currentPVId, { supportPoints });
 
             // Update UI if visible
@@ -3128,6 +4053,11 @@ export const CornerDetailsManager = {
         const showLabels = currentZoom >= 16;
         const point = pv.supportPoints[index];
 
+        // Count manual and raster points for proper numbering
+        const manualsBefore = pv.supportPoints.slice(0, index).filter(p => p.manual).length;
+        const gridsBefore = index - manualsBefore;
+        const label = point.manual ? `M${manualsBefore + 1}` : `R${gridsBefore + 1}`;
+
         // Initialize marker array if needed
         if (!this._supportPointMarkers) {
             this._supportPointMarkers = [];
@@ -3139,18 +4069,18 @@ export const CornerDetailsManager = {
             icon: {
                 path: google.maps.SymbolPath.CIRCLE,
                 scale: showLabels ? 6 : 4,
-                fillColor: '#00FF00',
+                fillColor: point.manual ? '#FFA500' : '#00FF00',
                 fillOpacity: 0.8,
-                strokeColor: '#008800',
+                strokeColor: point.manual ? '#FF6600' : '#008800',
                 strokeWeight: 1
             },
-            title: `Stützpunkt ${index + 1}: ${point.height?.toFixed(1) || '0.0'}m`,
+            title: `${label}: ${point.height?.toFixed(1) || '0.0'}m`,
             zIndex: 1000
         };
 
         if (showLabels) {
             markerOptions.label = {
-                text: `S${index + 1}`,
+                text: label,
                 fontSize: '10px',
                 fontWeight: 'bold',
                 color: '#000000'
@@ -3190,25 +4120,30 @@ export const CornerDetailsManager = {
         const showLabels = currentZoom >= 16;
 
         pv.supportPoints.forEach((point, index) => {
+            // Count manual and raster points for proper numbering
+            const manualsBefore = pv.supportPoints.slice(0, index).filter(p => p.manual).length;
+            const gridsBefore = index - manualsBefore;
+            const label = point.manual ? `M${manualsBefore + 1}` : `R${gridsBefore + 1}`;
+
             const markerOptions = {
                 position: { lat: point.lat, lng: point.lng },
                 map: map,
                 icon: {
                     path: google.maps.SymbolPath.CIRCLE,
                     scale: showLabels ? 6 : 4,
-                    fillColor: '#00FF00',
+                    fillColor: point.manual ? '#FFA500' : '#00FF00',
                     fillOpacity: 0.8,
-                    strokeColor: '#008800',
+                    strokeColor: point.manual ? '#FF6600' : '#008800',
                     strokeWeight: 1
                 },
-                title: `Stützpunkt ${index + 1}: ${point.height?.toFixed(1) || '0.0'}m`,
+                title: `${label}: ${point.height?.toFixed(1) || '0.0'}m`,
                 zIndex: 1000
             };
 
             // Only add label if zoomed in enough
             if (showLabels) {
                 markerOptions.label = {
-                    text: `S${index + 1}`,
+                    text: label,
                     fontSize: '10px',
                     fontWeight: 'bold',
                     color: '#000000'

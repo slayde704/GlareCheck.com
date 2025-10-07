@@ -783,16 +783,7 @@
         .corner-details-panel .menu-header {
             margin: 0;
             width: 100%;
-            padding-right: 40px; /* Space for close button */
             /* Inherit all styles from global .menu-header */
-        }
-        
-        .corner-details-panel .btn-close {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
         }
         
         .corner-details-panel .panel-body {
@@ -801,6 +792,14 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
+            padding-bottom: 10px; /* Reduce bottom padding since we have footer */
+        }
+
+        .corner-details-panel .panel-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
         
         .corners-container {
@@ -1105,12 +1104,16 @@
         <div id="cornerDetailsPanel" class="corner-details-panel">
             <div class="panel-header-wrapper">
                 <h6 class="menu-header" id="cornerDetailsHeader">Eckpunkt-Koordinaten</h6>
-                <button type="button" class="btn-close btn-sm" onclick="CornerDetailsManager.close()" aria-label="Schließen"></button>
             </div>
             <div class="panel-body">
                 <div id="cornerDetailsContent">
                     <!-- Content will be dynamically inserted here -->
                 </div>
+            </div>
+            <div class="panel-footer">
+                <button type="button" class="btn btn-secondary w-100" onclick="CornerDetailsManager.close()">
+                    <i class="bi bi-x-lg me-2"></i>Schließen
+                </button>
             </div>
         </div>
     </div>

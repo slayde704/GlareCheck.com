@@ -532,11 +532,11 @@ export const PVListRenderer = {
                 </div>
             </div>
             <div class="mb-2">
-                <button class="btn ${pv.gridNeedsUpdate ? 'btn-outline-danger' : 'btn-outline-primary'} btn-sm w-100"
+                ${this.getTopographyStatus(pv)}
+                <button class="btn ${this.getTopographyButtonClass(pv)} btn-sm w-100"
                         onclick="PVListRenderer.openTerrainHeightManager('${pv.id}')"
                         style="font-size: 0.875rem;">
-                    ${pv.gridNeedsUpdate ? '<i class="bi bi-exclamation-triangle-fill me-2"></i>' : '<i class="bi bi-geo-alt-fill me-2"></i>'}
-                    Geländehöhe verwalten ${pv.gridNeedsUpdate ? '(Update nötig!)' : ''}
+                    ${this.getTopographyButtonContent(pv)}
                 </button>
             </div>
             ` : pv.type !== 'roof-parallel' ? `
@@ -915,6 +915,55 @@ export const PVListRenderer = {
         this.deletingPVId = null;
     },
     
+    /**
+     * Get topography status for a PV area
+     */
+    getTopographyStatus(pv) {
+        // Show warning if area changed but Best-Fit is not active
+        if (pv.topographyOutdated && pv.topographyMode !== 'plane') {
+            return '<div class="text-danger small mb-2" style="font-size: 0.75rem;"><i class="bi bi-exclamation-triangle me-1"></i>Fläche wurde verändert - Topografie prüfen</div>';
+        }
+        return '';
+    },
+
+    /**
+     * Get topography button class
+     */
+    getTopographyButtonClass(pv) {
+        console.log('getTopographyButtonClass for', pv.id, 'mode:', pv.topographyMode, 'outdated:', pv.topographyOutdated);
+
+        if (!pv.topographyMode || pv.topographyMode === 'none') {
+            console.log('  -> returning btn-warning (no mode)');
+            return 'btn-warning';  // Yellow for "needs decision"
+        }
+        if (pv.topographyOutdated && pv.topographyMode !== 'plane') {
+            console.log('  -> returning btn-outline-danger (outdated)');
+            return 'btn-outline-danger';
+        }
+        // All defined topography modes get blue outline
+        if (pv.topographyMode === 'plane' || pv.topographyMode === 'grid' ||
+            pv.topographyMode === 'manual' || pv.topographyMode === 'both') {
+            console.log('  -> returning btn-outline-primary (configured)');
+            return 'btn-outline-primary';
+        }
+        console.log('  -> returning btn-outline-primary (default)');
+        return 'btn-outline-primary';
+    },
+
+    /**
+     * Get topography button content
+     */
+    getTopographyButtonContent(pv) {
+        if (!pv.topographyMode || pv.topographyMode === 'none') {
+            return '<i class="bi bi-exclamation-circle me-2"></i>Topografie definieren!';
+        }
+        if (pv.topographyOutdated && pv.topographyMode !== 'plane') {
+            return '<i class="bi bi-arrow-repeat me-2"></i>Topografie prüfen';
+        }
+        // All properly defined topography modes show "Topografie verwalten"
+        return '<i class="bi bi-geo-alt me-2"></i>Topografie verwalten';
+    },
+
     /**
      * Update PV parameters
      */
